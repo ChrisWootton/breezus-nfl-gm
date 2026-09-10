@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BreezusChrist GM</title>
+<style>
+:root{--g:#21c69c;--p:#17002f;--bg:#f4f2ef;--card:#fff;--ink:#17131d;--muted:#746e79;--line:#e6e0da;--red:#d74c4c;--amber:#b77a1d}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:Inter,system-ui,sans-serif;color:var(--ink)}button,input{font:inherit}.app{max-width:1250px;margin:auto;padding:14px}.hero{background:var(--p);color:white;border-radius:22px;padding:18px;display:flex;align-items:center;justify-content:space-between;gap:12px}.brand{display:flex;gap:12px;align-items:center}.logo{width:48px;height:48px;border-radius:15px;background:var(--g);display:grid;place-items:center;font-size:24px}.hero h1{margin:0;font-size:24px}.hero p{margin:3px 0 0;color:#d8d0e0;font-size:13px}.btn{min-height:46px;padding:0 17px;border:0;border-radius:12px;font-weight:900;cursor:pointer}.run{background:var(--g);color:var(--p)}.metrics{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:12px 0}.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:15px}.lab{font-size:10px;color:var(--muted);font-weight:900;text-transform:uppercase;letter-spacing:.05em}.num{font-size:27px;font-weight:950;letter-spacing:-.04em}.sub{font-size:12px;color:var(--muted)}.layout{display:grid;grid-template-columns:210px 1fr;gap:12px}.side{background:var(--p);border-radius:18px;padding:9px;height:max-content;position:sticky;top:10px}.nav{display:flex;flex-direction:column;gap:4px}.nav small{color:#a99fb1;font-size:9px;font-weight:900;padding:9px 11px 4px;text-transform:uppercase}.nav button{background:none;border:0;color:#ddd5e4;text-align:left;padding:11px;border-radius:10px;font-weight:750;cursor:pointer}.nav button.active{background:#30164d;color:white}.page{display:none}.page.active{display:block}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.title{display:flex;justify-content:space-between;align-items:center;gap:10px}.title h2,.title h3{margin:0}.pill{padding:4px 8px;border-radius:99px;font-size:10px;font-weight:900}.green{background:#e4faf3}.red{background:#fdeaea;color:#9d2929}.amber{background:#fff1d1;color:#82590e}.row{display:flex;justify-content:space-between;gap:12px;align-items:center;border-top:1px solid var(--line);padding:11px 0}.row:first-child{border-top:0}.player{font-weight:850}.meta{font-size:11px;color:var(--muted)}.note{font-size:12px;color:var(--muted);line-height:1.5}.alert{padding:12px;border-radius:12px;margin-top:8px}.match{background:linear-gradient(135deg,#fff,#effbf7)}.versus{display:grid;grid-template-columns:1fr 70px 1fr;align-items:center;text-align:center;gap:8px}.score{font-size:39px;font-weight:950}.bar{height:10px;background:#ece9e6;border-radius:99px;overflow:hidden}.bar i{display:block;height:100%;background:var(--g)}table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:9px;border-bottom:1px solid var(--line)}th{font-size:10px;color:var(--muted);text-transform:uppercase}.search{width:100%;padding:11px;border:1px solid var(--line);border-radius:10px;margin:10px 0}.empty{text-align:center;padding:20px;background:#faf9f7;border-radius:12px;color:var(--muted)}.toast{position:fixed;right:14px;bottom:14px;background:var(--p);color:#fff;padding:12px 14px;border-radius:11px;display:none;max-width:330px}
+@media(max-width:850px){.metrics{grid-template-columns:repeat(2,1fr)}.layout{grid-template-columns:1fr}.side{position:static}.nav{flex-direction:row;overflow:auto}.nav small{display:none}.grid2,.grid3{grid-template-columns:1fr}.hero{flex-direction:column;align-items:stretch}}@media(max-width:450px){.metrics{grid-template-columns:1fr 1fr}.score{font-size:30px}}
+</style></head>
+<body><div class="app">
+<header class="hero"><div class="brand"><div class="logo">🏈</div><div><h1>BreezusChrist NFL GM</h1><p><span id="connectionDot">●</span> Live dynasty command centre • Sleeper API proxy</p></div></div><button class="btn run" id="run">RUN MY NFL GM</button></header>
+<section class="metrics">
+<div class="card"><div class="lab">Week</div><div class="num" id="week">—</div><div class="sub">NFL state</div></div>
+<div class="card"><div class="lab">You</div><div class="num" id="youPts">—</div><div class="sub">Current matchup</div></div>
+<div class="card"><div class="lab">Opponent</div><div class="num" id="oppPts">—</div><div class="sub" id="oppName">—</div></div>
+<div class="card"><div class="lab">GM win %</div><div class="num" id="win">—</div><div class="sub">Model estimate</div></div>
+<div class="card"><div class="lab">Actions</div><div class="num" id="actions">—</div><div class="sub">Requires attention</div></div>
+</section>
+<div class="card" id="status">Press <b>RUN MY NFL GM</b> to refresh your live Sleeper data and run the GM engine.</div>
+<div class="layout" style="margin-top:12px">
+<aside class="side"><nav class="nav">
+<small>Command</small><button class="active" data-p="dash">🏠 Command Centre</button><button data-p="lineup">🧠 Lineup Lab</button><button data-p="match">⚔️ Matchup</button>
+<small>Roster</small><button data-p="players">👥 Players</button><button data-p="waivers">💰 Waivers</button><button data-p="trades">🤝 Trades</button><button data-p="dynasty">📈 Dynasty</button>
+<small>League</small><button data-p="league">🏆 League</button><button data-p="activity">📰 Activity</button><button data-p="settings">⚙️ Settings</button>
+</nav></aside>
+<main>
+<section class="page active" id="dash"><div class="grid2">
+<div class="card"><div class="title"><h3>GM Orders</h3><span class="pill green">DECISION ENGINE</span></div><div id="orders"></div></div>
+<div class="card match"><div class="lab">WEEKLY MATCHUP</div><div class="versus"><div><div class="meta" id="myTeam">YOU</div><div class="score" id="heroYou">—</div></div><b>VS</b><div><div class="meta" id="heroOppName">OPP</div><div class="score" id="heroOpp">—</div></div></div><div class="bar"><i id="winBar" style="width:50%"></i></div><div class="sub" style="text-align:center;margin-top:5px" id="winText">No model run yet</div></div></div>
+<div class="grid3" style="margin-top:12px"><div class="card"><div class="lab">Starters</div><div class="num" id="stCount">—</div></div><div class="card"><div class="lab">Roster</div><div class="num" id="roCount">—</div></div><div class="card"><div class="lab">League</div><div class="num" id="lgCount">—</div></div></div>
+<div class="card" style="margin-top:12px"><div class="title"><h3>Live alerts</h3><span class="pill amber" id="alertPill">—</span></div><div id="alerts"></div></div>
+</section>
+<section class="page" id="lineup"><div class="card"><div class="title"><h2>Lineup Lab</h2><span class="pill green">CURRENT SLEEPER LINEUP</span></div><p class="note">The GM checks your actual starters against roster status, injury flags and player metadata. External news should still be checked before kickoff.</p><div id="lineupRows"></div></div></section>
+<section class="page" id="match"><div class="grid2"><div class="card"><h3>Your Team</h3><div id="your"></div></div><div class="card"><h3 id="oppHeader">Opponent</h3><div id="opp"></div></div></div><div class="card" style="margin-top:12px"><h3>Positional battle</h3><div id="battle"></div></div></section>
+<section class="page" id="players"><div class="card"><div class="title"><h2>Roster Explorer</h2><span class="pill green" id="playerCount">—</span></div><input class="search" id="search" placeholder="Search players, position or team"><div id="players"></div></div></section>
+<section class="page" id="waivers"><div class="card"><div class="title"><h2>Waiver GM</h2><span class="pill green">LIVE OWNERSHIP</span></div><p class="note">Candidates are players not rostered in the league. Trending adds/drops are incorporated from Sleeper. A projection provider is not embedded, so the GM does not invent projected points.</p><div id="waivers"></div></div></section>
+<section class="page" id="trades"><div class="grid2"><div class="card"><h2>Trade Finder</h2><p class="note">Uses actual league roster composition to identify positional surplus and potential partners.</p><div id="tradeMe"></div></div><div class="card"><h3>Trade partners</h3><div id="partners"></div></div></div></section>
+<section class="page" id="dynasty"><div class="card"><div class="title"><h2>Dynasty Lab</h2><span class="pill green">LIVE ROSTER</span></div><div id="dynasty"></div></div></section>
+<section class="page" id="league"><div class="card"><div class="title"><h2>League Centre</h2><span class="pill green">LIVE</span></div><div id="league"></div></div></section>
+<section class="page" id="activity"><div class="grid2"><div class="card"><h2>Trending Adds</h2><div id="adds"></div></div><div class="card"><h2>Trending Drops</h2><div id="drops"></div></div></div><div class="card" style="margin-top:12px"><h2>Recent Transactions</h2><div id="tx"></div></div></section>
+<section class="page" id="settings"><div class="card"><h2>Connection</h2><div class="grid2"><label class="note">League ID<input class="search" id="leagueId" value="1312047300213739520"></label><label class="note">Sleeper username<input class="search" id="username" value="Breezuschrist"></label></div><p class="note">Read-only Sleeper API. No password or token is requested. Player database is cached by the browser for the session.</p></div></section>
+</main></div><div class="toast" id="toast"></div></div>
+<script>
+const S={league:null,users:[],rosters:[],matchups:[],players:{},mine:null,opp:null,me:null,week:null,adds:[],drops:[],tx:[]};
+const $=id=>document.getElementById(id);const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+async function api(p){const r=await fetch('/api/sleeper?path='+encodeURIComponent(p),{headers:{'Accept':'application/json'}});let body=null;try{body=await r.json()}catch{}if(!r.ok)throw Error((body&&body.error)||('API '+r.status));return body}
+function pn(id){const p=S.players[id];return p?.full_name||[p?.first_name,p?.last_name].filter(Boolean).join(' ')||id}
+function pm(id){const p=S.players[id]||{};return `${p.position||'—'} • ${p.team||'FA'}${p.age?' • age '+p.age:''}`}
+function tn(r){if(!r)return'—';const u=S.users.find(x=>x.user_id===r.owner_id);return u?.metadata?.team_name||u?.display_name||'Roster '+r.roster_id}
+function mm(rid){return S.matchups.find(x=>x.roster_id===rid)}
+function toast(t){const x=$('toast');x.textContent=t;x.style.display='block';setTimeout(()=>x.style.display='none',2400)}
+async function load(){
+ $('status').textContent='Connecting to Sleeper through the secure Cloudflare API layer…';$('connectionDot').textContent='●';
+ const lid=$('leagueId').value.trim(),un=$('username').value.trim();
+ const [lg,us,rs,nfl]=await Promise.all([api('/league/'+lid),api('/league/'+lid+'/users'),api('/league/'+lid+'/rosters'),api('/state/nfl')]);
+ S.league=lg;S.users=us;S.rosters=rs;S.week=nfl.display_week||nfl.week;
+ S.me=us.find(u=>(u.username||'').toLowerCase()===un.toLowerCase()||(u.display_name||'').toLowerCase()===un.toLowerCase());
+ if(!S.me)throw Error('Username not found in league');
+ S.mine=rs.find(r=>r.owner_id===S.me.user_id);S.matchups=await api('/league/'+lid+'/matchups/'+S.week);
+ const m=mm(S.mine.roster_id),or=S.matchups.find(x=>x.matchup_id===m?.matchup_id&&x.roster_id!==S.mine.roster_id);S.opp=rs.find(r=>r.roster_id===or?.roster_id);
+ try{S.players=await api('/players/nfl')}catch(e){S.players={}};
+ const results=await Promise.allSettled([api('/players/nfl/trending/add?lookback_hours=24&limit=25'),api('/players/nfl/trending/drop?lookback_hours=24&limit=25'),api('/league/'+lid+'/transactions/'+S.week),api('/league/'+lid+'/traded_picks')]);
+ S.adds=results[0].status==='fulfilled'?results[0].value:[];S.drops=results[1].status==='fulfilled'?results[1].value:[];S.tx=results[2].status==='fulfilled'?results[2].value:[];S.picks=results[3].status==='fulfilled'?results[3].value:[];
+ render();$('status').innerHTML='<b>LIVE GM RUN COMPLETE.</b> Sleeper refreshed at '+new Date().toLocaleTimeString()+'.';$('connectionDot').textContent='●';toast('GM complete')}
+function projection(r){let total=0;(r?.starters||[]).forEach(id=>{const p=S.players[id]||{};let rank=Number(p.search_rank)||150;let base=Math.max(3,22-Math.min(rank,120)*.11);if(p.injury_status)base*=.35;total+=base});return total}
+function render(){
+ const m=mm(S.mine.roster_id),o=S.opp&&mm(S.opp.roster_id),yp=Number(m?.points||0),op=Number(o?.points||0);
+ const preYou=projection(S.mine),preOpp=projection(S.opp),den=preYou+preOpp||1;const preWin=preYou/den*100;const liveWin=(yp||op)?Math.max(5,Math.min(95,50+(yp-op)*2)):preWin;
+ $('week').textContent=S.week;$('youPts').textContent=yp.toFixed(2);$('oppPts').textContent=op.toFixed(2);$('oppName').textContent=tn(S.opp);$('win').textContent=liveWin.toFixed(0)+'%';$('actions').textContent='—';
+ $('myTeam').textContent=tn(S.mine);$('heroYou').textContent=yp.toFixed(1);$('heroOppName').textContent=tn(S.opp);$('heroOpp').textContent=op.toFixed(1);$('winBar').style.width=liveWin+'%';$('winText').textContent=(yp||op)?'Live-score model: '+liveWin.toFixed(0)+'%':'Pre-game roster model: '+preWin.toFixed(0)+'%';
+ $('stCount').textContent=(S.mine.starters||[]).filter(Boolean).length;$('roCount').textContent=(S.mine.players||[]).length;$('lgCount').textContent=S.rosters.length;
+ renderOrders();renderLineup();renderMatch();renderPlayers();renderWaivers();renderTrades();renderDynasty();renderLeague();renderActivity();
+}
+function renderOrders(){
+  let a=[];
+  (S.mine.starters||[]).forEach(id=>{
+    const p=S.players[id]||{};
+    if(p.injury_status) a.push('<div class=\"alert red\"><b>CHECK '+esc(pn(id))+'</b><br>'+esc(p.injury_status)+'</div>');
+  });
+  const inactive=(S.mine.players||[]).filter(id=>S.players[id]?.active===false);
+  if(inactive.length) a.push('<div class=\"alert amber\"><b>'+inactive.length+' inactive roster asset'+(inactive.length>1?'s':'')+'</b><br>'+inactive.slice(0,4).map(pn).map(esc).join(', ')+'</div>');
+  if(!a.length) a.push('<div class=\"alert green\"><b>No Sleeper injury/inactive flags found on your starters.</b></div>');
+  const topAdds=S.adds.filter(x=>!(S.mine.players||[]).includes(x.player_id)).slice(0,3);
+  if(topAdds.length) a.push('<div class=\"alert green\"><b>Waiver watch:</b> '+topAdds.map(x=>pn(x.player_id)).map(esc).join(', ')+'</div>');
+  $('orders').innerHTML=a.join('');
+  $('actions').textContent=a.length;
+}
+function renderLineup(){
+  const starters=S.mine.starters||[];
+  $('lineupRows').innerHTML=starters.map((id,i)=>{
+    if(!id){
+      return '<div class="row"><span>'+(i+1)+'. Empty</span><span class="pill red">EMPTY</span></div>';
+    }
+    const p=S.players[id]||{};
+    const status=p.injury_status?esc(p.injury_status):'START';
+    const cls=p.injury_status?'red':'green';
+    return '<div class="row"><span><span class="player">'+esc(pn(id))+'</span><br><span class="meta">'+esc(pm(id))+'</span></span><span class="pill '+cls+'">'+status+'</span></div>';
+  }).join('');
+}
+function renderMatch(){
+  const a={},b={};
+  (S.mine.players||[]).forEach(id=>{const p=S.players[id];if(p&&p.position)a[p.position]=(a[p.position]||0)+1;});
+  (S.opp?.players||[]).forEach(id=>{const p=S.players[id];if(p&&p.position)b[p.position]=(b[p.position]||0)+1;});
+  $('your').innerHTML=(S.mine.players||[]).map(id=>'<div class=\"row\"><span>'+esc(pn(id))+'</span><span class=\"meta\">'+esc(pm(id))+'</span></div>').join('');
+  $('oppHeader').textContent=tn(S.opp);
+  $('opp').innerHTML=(S.opp?.players||[]).map(id=>'<div class=\"row\"><span>'+esc(pn(id))+'</span><span class=\"meta\">'+esc(pm(id))+'</span></div>').join('');
+  $('battle').innerHTML=['QB','RB','WR','TE','DEF','K'].map(p=>'<div class=\"row\"><b>'+p+'</b><span>'+(a[p]||0)+' you</span><span>vs</span><span>'+(b[p]||0)+' opp</span></div>').join('');
+}
+function renderPlayers(q=''){const a=(S.mine.players||[]).filter(id=>(pn(id)+' '+pm(id)).toLowerCase().includes(q.toLowerCase()));$('playerCount').textContent=a.length+' shown';$('players').innerHTML=a.map(id=>{const p=S.players[id]||{};return`<div class="row"><span><span class="player">${esc(pn(id))}</span><br><span class="meta">${esc(pm(id))}</span></span><span class="pill ${p.active===false?'red':'green'}">${p.active===false?'INACTIVE':'ACTIVE'}</span></div>`}).join('')||'<div class="empty">No matches.</div>'}
+function renderWaivers(){const owned=new Set(S.rosters.flatMap(r=>r.players||[]));let a=Object.values(S.players).filter(p=>p?.player_id&&!owned.has(p.player_id)&&p.active!==false&&['QB','RB','WR','TE'].includes(p.position));const hot=new Map(S.adds.map(x=>[x.player_id,x.count||0]));a.sort((x,y)=>(hot.get(y.player_id)||0)-(hot.get(x.player_id)||0)||(x.search_rank||9999)-(y.search_rank||9999));$('waivers').innerHTML=a.slice(0,30).map((p,i)=>`<div class="row"><span><span class="player">${i+1}. ${esc(p.full_name||p.player_id)}</span><br><span class="meta">${esc(p.position)} • ${esc(p.team||'FA')} • trend adds ${hot.get(p.player_id)||0}</span></span><span class="pill green">AVAILABLE</span></div>`).join('')||'<div class="empty">No available candidates returned.</div>'}
+function renderTrades(){const c={};(S.mine.players||[]).forEach(id=>{const p=S.players[id];if(p?.position)c[p.position]=(c[p.position]||0)+1});$('tradeMe').innerHTML=Object.entries(c).sort((a,b)=>b[1]-a[1]).map(([p,n])=>`<div class="row"><b>${p}</b><span>${n} rostered</span></div>`).join('')+'<div class="alert amber"><b>GM principle:</b> use surplus positions to target teams with shortages. Exact trade value needs a dynasty valuation source.</div>';const ps=S.rosters.filter(r=>r.roster_id!==S.mine.roster_id).map(r=>{const x={};(r.players||[]).forEach(id=>{const p=S.players[id];if(p?.position)x[p.position]=(x[p.position]||0)+1});return{name:tn(r),x}});$('partners').innerHTML=ps.map(x=>`<div class="row"><b>${esc(x.name)}</b><span class="meta">${Object.entries(x.x).map(([p,n])=>p+':'+n).join(' • ')}</span></div>`).join('')}
+function renderDynasty(){const a=(S.mine.players||[]).map(id=>S.players[id]).filter(p=>p?.age&&p.age<=24).sort((x,y)=>x.age-y.age);$('dynasty').innerHTML=a.map(p=>`<div class="row"><span><span class="player">${esc(p.full_name)}</span><br><span class="meta">${esc(p.position)} • ${esc(p.team||'FA')} • age ${p.age}</span></span><span class="pill green">YOUNG</span></div>`).join('')||'<div class="empty">No age data.</div>'}
+function renderLeague(){const a=S.rosters.map(r=>({n:tn(r),w:r.settings?.wins||0,l:r.settings?.losses||0,pf:r.settings?.fpts||0,pts:mm(r.roster_id)?.points||0})).sort((x,y)=>y.w-x.w||y.pf-x.pf);$('league').innerHTML='<table><tr><th>Team</th><th>W-L</th><th>Season PF</th><th>Week</th></tr>'+a.map(x=>`<tr><td><b>${esc(x.n)}</b></td><td>${x.w}-${x.l}</td><td>${Number(x.pf).toFixed(1)}</td><td>${Number(x.pts).toFixed(1)}</td></tr>`).join('')+'</table>'}
+function renderActivity(){
+  const list=(a,limit=12)=>a.slice(0,limit).map(x=>{
+    const p=S.players[x.player_id]||{};
+    return '<div class=\"row\"><span><b>'+esc(p.full_name||x.player_id)+'</b><br><span class=\"meta\">'+esc(p.position||'')+'</span></span><span class=\"pill green\">'+(x.count||0)+'</span></div>';
+  }).join('')||'<div class=\"empty\">No data.</div>';
+  $('adds').innerHTML=list(S.adds);
+  $('drops').innerHTML=list(S.drops);
+  $('tx').innerHTML=S.tx.slice(0,15).map(x=>'<div class=\"row\"><span><b>'+esc(x.type||'transaction')+'</b><br><span class=\"meta\">Week '+esc(x.leg||S.week)+' • '+new Date(x.created||Date.now()).toLocaleString()+'</span></span><span>'+((x.roster_ids||[]).join(', '))+'</span></div>').join('')||'<div class=\"empty\">No transactions returned.</div>';
+}
+document.querySelectorAll('.nav button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));b.classList.add('active');$(b.dataset.p).classList.add('active')});
+$('run').onclick=async()=>{try{$('run').disabled=true;$('run').textContent='RUNNING GM…';await load()}catch(e){$('status').innerHTML='<b>Connection error:</b> '+esc(e.message)+'<br><span class="note">Check that this deployment includes the Cloudflare Pages Function and was deployed through Git/Wrangler, not Direct Upload.</span>';toast(e.message);$('connectionDot').textContent='×'}finally{$('run').disabled=false;$('run').textContent='RUN MY NFL GM'}};
+$('search').oninput=e=>renderPlayers(e.target.value);
+</script></body></html>
