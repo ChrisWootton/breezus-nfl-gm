@@ -1,4 +1,4 @@
-const BASE = 'https://api.sleeper.app';
+const BASE = 'https://api.sleeper.com';
 
 function validSeason(value) {
   const s = String(value || '2026');
