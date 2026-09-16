@@ -1,4 +1,4 @@
-/* Breezus NFL GM Enhancement Loader v2.5.8 */
+/* Breezus NFL GM Enhancement Loader v2.5.9 */
 (function(){
   'use strict';
   function gmDataReady(){
@@ -17,7 +17,9 @@
   }
   function load(src){return new Promise(function(resolve,reject){var s=document.createElement('script');s.src=src;s.onload=resolve;s.onerror=reject;document.head.appendChild(s)})}
   waitForSleeperData(function(){
-    load('gm-enhancements-v24.js')
+    load('gm-v25-roster-fresh.js')
+      .then(function(){return window.gmRosterRefreshPromise||true})
+      .then(function(){return load('gm-enhancements-v24.js')})
       .then(function(){return load('gm-v25-next-level.js')})
       .then(function(){return load('gm-v25-trending.js')})
       .then(function(){return load('gm-v25-def-streaming.js')})
