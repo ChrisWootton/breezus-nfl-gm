@@ -552,4 +552,5 @@ document.querySelectorAll('.nav button').forEach(b=>b.onclick=()=>{document.quer
 $('run').onclick=async()=>{try{$('run').disabled=true;$('run').textContent='BUILDING GM…';await load()}catch(e){console.error(e);$('status').innerHTML='<b>GM error:</b> '+esc(e.message);$('connectionDot').textContent='×';toast(e.message)}finally{$('run').disabled=false;$('run').textContent='RUN MY NFL GM'}};
 $('search').oninput=e=>renderPlayers(e.target.value);
 </script>
+<script src="gm-enhancements.js"></script>
 </body></html>
