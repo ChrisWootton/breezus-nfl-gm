@@ -1,62 +1,34 @@
-/* Breezus NFL GM Enhancement Pack v1.4, real Sleeper bench population */
+/* Breezus NFL GM Enhancement Pack v1.5, fix global S access */
 (function(){'use strict';
 const POSITIONS=['QB','RB','WR','TE','DEF','DST','K'];
 const FLEX_POS=['RB','WR','TE'];
 const $=id=>document.getElementById(id);
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const safe=(fn,f)=>{try{return fn()}catch{return f}};
+function appReady(){return typeof S!=='undefined'&&S&&Array.isArray(S.rosters)&&S.players}
 function injectStyles(){if($('gm-enhancement-styles'))return;const s=document.createElement('style');s.id='gm-enhancement-styles';s.textContent='.gm-enhance{margin:14px 0 0;padding:16px;border:1px solid rgba(23,0,47,.1);border-radius:16px;background:#faf9f7}.gm-enhance h3{margin:0 0 12px}.gm-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}.gm-card{padding:12px;border-radius:12px;background:#fff;border:1px solid rgba(23,0,47,.07)}.gm-score{font-size:24px;font-weight:800}.gm-muted{opacity:.68;font-size:12px}.gm-pill{display:inline-block;padding:3px 8px;border-radius:999px;font-size:11px;background:rgba(23,0,47,.06);margin:2px}.gm-row{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:9px 0;border-bottom:1px solid rgba(23,0,47,.07)}.gm-row:last-child{border-bottom:0}.gm-enhance .gm-card strong{font-weight:850}.gm-bench-meta{display:flex;gap:5px;flex-wrap:wrap;margin-top:3px}.gm-bench-rating{font-weight:900;font-size:12px}.gm-real-bench{background:linear-gradient(90deg,#fff,#faf9f7)}';document.head.appendChild(s)}
 function weekly(id){return safe(()=>Number(expectedPoints(id)||0),0)}
 function dynasty(id){return safe(()=>Number(dynastyScore(id)||0),0)}
 function gmScore(id){const w=weekly(id),d=dynasty(id),b=safe(()=>Number(baseScore(id)||0),0);return Math.round(Math.min(100,w*.48+d*.32+b*.2))}
-function status(id){return safe(()=>window.playerStatus(id)?.label||'AVAILABLE','AVAILABLE')}
+function status(id){return safe(()=>playerStatus(id)?.label||'AVAILABLE','AVAILABLE')}
 function actionFor(id){const st=status(id),d=dynasty(id),b=safe(()=>Number(baseScore(id)||0),0);if(st==='OUT')return['BENCH','red'];if(st==='CHECK')return['WATCH','amber'];if(b<48)return['DROP','red'];if(d>=88||b>=82)return['HOLD','green'];if(d>=75)return['STASH','blue'];return['HOLD','amber']}
 function getMine(){
- if(!window.S)return null;
+ if(typeof S==='undefined'||!S)return null;
  if(S.mine&&typeof S.mine==='object'&&Array.isArray(S.mine.players))return S.mine;
- if(Array.isArray(S.rosters))return S.rosters.find(r=>String(r.roster_id)===String(S.mine))||S.rosters.find(r=>r.owner_id===S.user?.user_id)||null;
+ if(Array.isArray(S.rosters))return S.rosters.find(r=>String(r.roster_id)===String(S.mine))||S.rosters.find(r=>r.owner_id===S.me?.user_id)||null;
  return null;
 }
-function rosterIds(){const mine=getMine();return unique((mine?.players||[]).map(String));}
-function unique(a){return [...new Set((a||[]).filter(Boolean))]}
+function rosterIds(){const mine=getMine();return [...new Set((mine?.players||[]).map(String).filter(Boolean))]}
 function renderRoster(){const mine=getMine(),target=$('lineupRows');if(!mine||!target||$('gm-roster-board'))return;const ids=rosterIds().filter(id=>POSITIONS.includes(position(id)));const html='<div class="gm-enhance" id="gm-roster-board"><h3>Full Roster GM Board</h3><div class="gm-grid">'+ids.map(id=>{const a=actionFor(id);return '<div class="gm-card"><strong>'+esc(pn(id))+'</strong><div class="gm-score">'+gmScore(id)+'</div><div class="gm-muted">GM fit · '+esc(position(id))+'</div><span class="gm-pill">Wk '+weekly(id).toFixed(1)+'</span><span class="gm-pill">Dyn '+dynasty(id)+'</span><span class="gm-pill">'+esc(a[0])+'</span></div>'}).join('')+'</div></div>';target.insertAdjacentHTML('beforebegin',html)}
-function realStarterIds(){
- const mine=getMine();
- const starters=Array.isArray(mine?.starters)?mine.starters.map(String).filter(Boolean):[];
- if(starters.length)return new Set(starters);
- return new Set();
-}
-function findBenchRows(target){
- const all=[...target.querySelectorAll('.row')];
- return all.filter(row=>/^\s*BN\b/i.test((row.textContent||'').trim())||row.querySelector('.slot')?.textContent?.trim()==='BN');
-}
-function benchPlayerIds(){
- const mine=getMine();if(!mine)return [];
- const ids=rosterIds();
- const starters=realStarterIds();
- return ids.filter(id=>!starters.has(String(id))&&POSITIONS.includes(position(id)));
-}
-function benchHtml(id){
- const p=player(id),pos=position(id),gm=gmScore(id),wk=weekly(id),dyn=dynasty(id),st=status(id),act=actionFor(id);
- return '<span class="slot">BN</span><div style="flex:1"><div class="player">'+esc(pn(id))+'</div><div class="meta">'+esc(pos)+' · '+(p?.team?esc(p.team)+' · ':'')+'age '+esc(p?.age??'—')+' · model '+wk.toFixed(1)+'</div><div class="gm-bench-meta"><span class="gm-pill gm-bench-rating">GM '+gm+'</span><span class="gm-pill">Dyn '+dyn+'</span><span class="gm-pill">'+esc(act[0])+'</span>'+(st&&st!=='AVAILABLE'?'<span class="gm-pill">'+esc(st)+'</span>':'')+'</div></div>';
-}
-function repairBench(){
- const target=$('lineupRows');if(!target)return;
- const mine=getMine();if(!mine||!Array.isArray(mine.players)||!mine.players.length)return;
- const rows=findBenchRows(target);if(!rows.length)return;
- const bench=benchPlayerIds();
- rows.forEach((row,i)=>{
-   row.classList.add('gm-real-bench');
-   if(i<bench.length){row.innerHTML=benchHtml(bench[i]);}
-   else{row.innerHTML='<span class="slot">BN</span><div style="flex:1"><div class="player">Empty</div><div class="meta">No additional roster player</div></div><span class="gm-pill">OPEN</span>';}
- });
- const marker=$('gm-bench-source');
- if(!marker){const note=document.createElement('div');note.id='gm-bench-source';note.className='note';note.style.marginTop='8px';note.innerHTML='<b>Bench:</b> populated directly from your Sleeper roster, excluding the 8 current starters.';target.insertBefore(note,target.firstChild)}
-}
+function realStarterIds(){const mine=getMine();const starters=Array.isArray(mine?.starters)?mine.starters.map(String).filter(Boolean):[];return new Set(starters)}
+function findBenchRows(target){const all=[...target.querySelectorAll('.row')];return all.filter(row=>{const slot=row.querySelector('.slot');return String(slot?.textContent||'').trim().toUpperCase()==='BN'||/^\s*BN\b/i.test((row.textContent||'').trim())})}
+function benchPlayerIds(){const mine=getMine();if(!mine)return [];const ids=rosterIds();const starters=realStarterIds();return ids.filter(id=>!starters.has(String(id))&&POSITIONS.includes(position(id)))}
+function benchHtml(id){const p=player(id),pos=position(id),gm=gmScore(id),wk=weekly(id),dyn=dynasty(id),st=status(id),act=actionFor(id);return '<span class="slot">BN</span><div style="flex:1"><div class="player">'+esc(pn(id))+'</div><div class="meta">'+esc(pos)+' · '+(p?.team?esc(p.team)+' · ':'')+'age '+esc(p?.age??'—')+' · model '+wk.toFixed(1)+'</div><div class="gm-bench-meta"><span class="gm-pill gm-bench-rating">GM '+gm+'</span><span class="gm-pill">Dyn '+dyn+'</span><span class="gm-pill">'+esc(act[0])+'</span>'+(st&&st!=='AVAILABLE'?'<span class="gm-pill">'+esc(st)+'</span>':'')+'</div></div>'}
+function repairBench(){const target=$('lineupRows');if(!target)return;const mine=getMine();if(!mine||!Array.isArray(mine.players)||!mine.players.length)return;const rows=findBenchRows(target);if(!rows.length)return;const bench=benchPlayerIds();rows.forEach((row,i)=>{row.classList.add('gm-real-bench');if(i<bench.length){const current=row.dataset.gmPlayer||'';if(current!==bench[i]){row.innerHTML=benchHtml(bench[i]);row.dataset.gmPlayer=bench[i]}}else{row.innerHTML='<span class="slot">BN</span><div style="flex:1"><div class="player">Empty</div><div class="meta">No additional roster player</div></div><span class="gm-pill">OPEN</span>';row.dataset.gmPlayer=''}});const marker=$('gm-bench-source');if(!marker){const note=document.createElement('div');note.id='gm-bench-source';note.className='note';note.style.marginTop='8px';note.innerHTML='<b>Bench:</b> populated directly from your Sleeper roster, excluding current starters.';target.insertBefore(note,target.firstChild)}}
 function trending(){const owned=new Set(S.rosters.flatMap(r=>r.players||[]));const trend=new Map((S.adds||[]).map(x=>[String(x.player_id),Number(x.count)||0]));return Object.values(S.players||{}).filter(p=>{const id=String(p?.player_id||'');return id&&!owned.has(id)&&['QB','RB','WR','TE','DEF','DST'].includes(p.position)&&safe(()=>waiverEligible(p,trend.has(id)),true)}).map(p=>{const id=String(p.player_id);return {...p,id,trend:trend.get(id)||0,gm:gmScore(id)}}).sort((a,b)=>b.gm-a.gm||b.trend-a.trend).slice(0,15)}
 function renderTrending(){const target=$('waiversPage');if(!target||$('gm-trending-board'))return;const data=trending();const html='<div class="gm-enhance" id="gm-trending-board"><h3>Trending Adds by Position</h3><div class="gm-grid">'+['QB','RB','WR','TE','DEF'].map(pos=>{const rows=data.filter(x=>x.position===pos||((pos==='DEF')&&x.position==='DST')).slice(0,3);return '<div class="gm-card"><strong>'+pos+'</strong>'+(rows.length?rows.map(x=>'<div class="gm-row"><span>'+esc(pn(x.id))+'<br><span class="gm-muted">GM '+x.gm+' · adds '+x.trend+'</span></span></div>').join(''):'<div class="gm-muted" style="padding-top:8px">No current candidates</div>')+'</div>'}).join('')+'</div></div>';target.appendChild(document.createRange().createContextualFragment(html))}
 function renderQueue(){const target=$('allOrders'),mine=getMine();if(!mine||!target||$('gm-action-queue'))return;const ids=rosterIds().filter(id=>POSITIONS.includes(position(id)));const drops=ids.map(id=>({id,a:actionFor(id),s:gmScore(id)})).filter(x=>x.a[0]==='DROP'||x.a[0]==='BENCH').sort((a,b)=>a.s-b.s).slice(0,5);const adds=trending().slice(0,5);const rows=drops.map(x=>'<div class="gm-row"><span>Consider '+esc(pn(x.id))+'<br><span class="gm-muted">'+esc(x.a[0])+' · GM '+x.s+'</span></span><b>ROSTER</b></div>').join('')+adds.map(x=>'<div class="gm-row"><span>Claim/watch '+esc(pn(x.id))+'<br><span class="gm-muted">'+x.position+' · GM '+x.gm+'</span></span><b>WAIVER</b></div>').join('');const html='<div class="gm-enhance" id="gm-action-queue"><h3>GM Action Queue</h3>'+(rows||'<div class="gm-muted">No immediate actions detected.</div>')+'</div>';target.insertAdjacentHTML('beforeend',html)}
-function render(){if(!window.S||!S.rosters||!S.players)return;injectStyles();repairBench();renderRoster();renderTrending();renderQueue()}
-function boot(){let attempts=0;const tick=()=>{attempts++;render();if(attempts<100)setTimeout(tick,500)};tick();const observer=new MutationObserver(()=>{clearTimeout(observer._timer);observer._timer=setTimeout(render,120)});observer.observe(document.body,{childList:true,subtree:true})}
+function render(){if(!appReady())return;injectStyles();repairBench();renderRoster();renderTrending();renderQueue()}
+function boot(){let attempts=0;const tick=()=>{attempts++;render();if(attempts<120)setTimeout(tick,500)};tick();const observer=new MutationObserver(()=>{clearTimeout(observer._timer);observer._timer=setTimeout(render,180)});observer.observe(document.body,{childList:true,subtree:true})}
 document.readyState==='loading'?document.addEventListener('DOMContentLoaded',boot):boot();
 })();
