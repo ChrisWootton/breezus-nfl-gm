@@ -1,4 +1,4 @@
-/* Breezus NFL GM Enhancement Loader v2.5.1 */
+/* Breezus NFL GM Enhancement Loader v2.5.3 */
 (function(){
   'use strict';
   function gmDataReady(){
@@ -19,6 +19,7 @@
   waitForSleeperData(function(){
     load('gm-enhancements-v24.js')
       .then(function(){return load('gm-v25-next-level.js')})
+      .then(function(){return load('gm-v25-trending.js')})
       .catch(function(e){console.error('GM enhancement loader failed',e)})
   });
 })();
