@@ -1,4 +1,4 @@
-/* Breezus NFL GM Live Roster Freshness v1.3 */
+/* Breezus NFL GM Live Roster Freshness v1.4 */
 (function(){
   'use strict';
   let busy=false,last=0;
@@ -10,7 +10,7 @@
     try{
       await Promise.all([
         loadScript('gm-v25-trending.js'),
-        loadScript('gm-v25-def-compare.js')
+        loadScript('gm-v25-def-streaming.js')
       ]);
     }catch(e){console.warn('Waiver board refresh failed',e);}
   }
