@@ -1,4 +1,4 @@
-/* Breezus NFL GM Live Availability Guard v1.0 */
+/* Breezus NFL GM Live Availability Guard v1.1 */
 (function(){
   'use strict';
   let busy=false,last=0,ownedTeams=new Set(),ownedIds=new Set();
@@ -14,7 +14,6 @@
       const k=String(id);rostered.add(k);ownedIds.add(k);
       if(isDef(k)&&team(k))ownedTeams.add(team(k));
     }));
-    /* If a fresh roster response is temporarily behind, use today's transaction history as a safety net. */
     const txOwner=new Map();
     (tx||[]).slice().sort((a,b)=>Number(a.created||0)-Number(b.created||0)).forEach(t=>{
       Object.keys(t.drops||{}).forEach(id=>{const k=String(id);if(isDef(k))txOwner.delete(k)});
@@ -37,9 +36,11 @@
         const t=String(el?.textContent||'').trim().toUpperCase();
         if(ownedTeams.has(t))row.remove();
       });
-      roots.forEach(r=>r.querySelectorAll('.gm25cmpweek,.gm25defweek').forEach(w=>{
-        w.querySelectorAll('.gm25cmprow,.gm25defrow').forEach((row,i)=>{const rank=row.querySelector('.gm25cmpmeta,.gm25defrank');if(rank)rank.textContent=String(i+1)});
-      }));
+      root.querySelectorAll('.gm25cmpweek,.gm25defweek').forEach(w=>{
+        w.querySelectorAll('.gm25cmprow,.gm25defrow').forEach((row,i)=>{
+          const rank=row.querySelector('.gm25cmpmeta,.gm25defrank');if(rank)rank.textContent=String(i+1);
+        });
+      });
     });
     const trend=document.getElementById('gm25-trending');
     if(trend){
@@ -47,13 +48,14 @@
         const title=String(card.querySelector('.gm25trendname')?.textContent||'').trim().toUpperCase();
         if(title!=='DEFENCE'&&title!=='DEF')return;
         card.querySelectorAll('.gm25trendrow').forEach(row=>{
-          const name=row.querySelector('.gm25trendname');
-          const meta=String(row.querySelector('.gm25trendmeta')?.textContent||'');
-          const id=Object.keys(S.players||{}).find(k=>String(S.players[k]?.full_name||'')===String(name?.textContent||'').trim());
+          const name=String(row.querySelector('.gm25trendname')?.textContent||'').trim();
+          const id=Object.keys(S.players||{}).find(k=>String(S.players[k]?.full_name||'').trim()===name);
           const t=id?team(id):'';
           if(t&&ownedTeams.has(t))row.remove();
         });
-        card.querySelectorAll('.gm25trendrow').forEach((row,i)=>{const rank=row.querySelector('.gm25trendrank');if(rank)rank.textContent=String(i+1)});
+        card.querySelectorAll('.gm25trendrow').forEach((row,i)=>{
+          const rank=row.querySelector('.gm25trendrank');if(rank)rank.textContent=String(i+1);
+        });
       });
     }
   }
@@ -73,6 +75,11 @@
     finally{busy=false}
   }
   window.gmRefreshLiveAvailability=refresh;
-  function boot(){refresh(true);setInterval(()=>refresh(false),15000);}
+  function boot(){
+    const target=document.getElementById('waiversPage')||document.body;
+    try{new MutationObserver(()=>hideUnavailable()).observe(target,{childList:true,subtree:true});}catch(e){}
+    refresh(true);
+    setInterval(()=>refresh(false),15000);
+  }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
 })();
