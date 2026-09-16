@@ -1,4 +1,4 @@
-/* Breezus NFL GM Enhancement Loader v2.8 */
+/* Breezus NFL GM Enhancement Loader v2.9 */
 (function(){
   'use strict';
   function gmDataReady(){try{return typeof S!=='undefined'&&S&&Array.isArray(S.rosters)&&S.rosters.length>0&&S.players&&Object.keys(S.players).length>0&&S.me}catch(e){return false}}
@@ -18,6 +18,7 @@
       .then(function(){return load('gm-v27-weekly-gm.js')})
       .then(function(){return load('gm-v27-action-board.js')})
       .then(function(){return load('gm-v28-full-lineup.js')})
+      .then(function(){return load('gm-v29-decision-engine.js')})
       .then(function(){window.__gmEnhancementsBooting=false})
       .catch(function(e){window.__gmEnhancementsBooting=false;console.error('GM enhancement loader failed',e)})
   })
