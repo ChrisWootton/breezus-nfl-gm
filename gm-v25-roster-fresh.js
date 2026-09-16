@@ -1,4 +1,4 @@
-/* Breezus NFL GM Live Roster Freshness v1.1 */
+/* Breezus NFL GM Live Roster Freshness v1.2 */
 (function(){
   'use strict';
   let busy=false,last=0;
@@ -32,7 +32,7 @@
       last=Date.now();
       if(changed){
         try{window.dispatchEvent(new CustomEvent('gm-roster-updated',{detail:{at:last}}))}catch(e){}
-        await rerenderWaiverBoards();
+        if(!window.__gmEnhancementsBooting)await rerenderWaiverBoards();
       }
       return changed;
     }catch(e){console.warn('Live roster refresh failed',e);return false}
