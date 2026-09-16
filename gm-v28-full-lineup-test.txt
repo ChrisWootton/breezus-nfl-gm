@@ -1,1 +1,0 @@
-Loaded by gm-enhancements.js after the weekly GM so the Home panel is replaced with the full current Sleeper starting lineup.
