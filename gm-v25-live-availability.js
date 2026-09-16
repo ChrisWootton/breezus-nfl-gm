@@ -1,4 +1,4 @@
-/* Breezus NFL GM Live Availability Guard v1.4 */
+/* Breezus NFL GM Live Availability Guard v1.5 */
 (function(){
   'use strict';
   let busy=false,last=0,ownedTeams=new Set(),ownedIds=new Set(),liveVerified=false;
@@ -11,13 +11,14 @@
     window.gmLiveOwnedDefTeams=new Set(ownedTeams);
     window.gmLiveOwnedDefIds=new Set(ownedIds);
     window.gmLiveAvailabilityVerified=liveVerified;
+    try{window.dispatchEvent(new CustomEvent('gm-live-availability',{detail:{teams:[...ownedTeams],verified:liveVerified}}))}catch(e){}
   }
   function seedLocalOwnership(){
-    const teams=new Set(),ids=new Set();
+    ownedTeams=new Set();ownedIds=new Set();
     (S.rosters||[]).forEach(r=>(r.players||[]).forEach(id=>{
-      const k=String(id);ids.add(k);if(isDef(k)&&team(k))teams.add(team(k));
+      const k=String(id);ownedIds.add(k);if(isDef(k)&&team(k))ownedTeams.add(team(k));
     }));
-    ownedTeams=teams;ownedIds=ids;publish();
+    publish();
   }
   function buildOwnership(rs,txLists){
     ownedTeams=new Set();ownedIds=new Set();
@@ -45,68 +46,37 @@
     const r=await fetch('/api/sleeper?path='+encodeURIComponent(fresh),{cache:'no-store',headers:{Accept:'application/json'}});
     if(!r.ok)throw Error('Sleeper '+r.status);return r.json();
   }
-  function hideUnavailable(){
-    const roots=[document.getElementById('gm25-def-compare'),document.getElementById('gm25-def-streaming')].filter(Boolean);
-    roots.forEach(root=>{
-      root.querySelectorAll('.gm25cmprow,.gm25defrow').forEach(row=>{
-        const el=row.querySelector('.gm25cmpname,.gm25defname');
-        const t=String(el?.textContent||'').trim().toUpperCase();
-        if(ownedTeams.has(t)||(!liveVerified&&t))row.remove();
-      });
-      root.querySelectorAll('.gm25cmpweek,.gm25defweek').forEach(w=>{
-        w.querySelectorAll('.gm25cmprow,.gm25defrow').forEach((row,i)=>{
-          const rank=row.querySelector('.gm25cmpmeta,.gm25defrank');if(rank)rank.textContent=String(i+1);
-        });
-      });
-    });
-    const trend=document.getElementById('gm25-trending');
-    if(trend){
-      trend.querySelectorAll('.gm25trendcard').forEach(card=>{
-        const title=String(card.querySelector('.gm25trendname')?.textContent||'').trim().toUpperCase();
-        if(title!=='DEFENCE'&&title!=='DEF')return;
-        card.querySelectorAll('.gm25trendrow').forEach(row=>{
-          const name=String(row.querySelector('.gm25trendname')?.textContent||'').trim();
-          const id=Object.keys(S.players||{}).find(k=>String(S.players[k]?.full_name||'').trim()===name);
-          const t=id?team(id):'';
-          if(t&&(ownedTeams.has(t)||!liveVerified))row.remove();
-        });
-        card.querySelectorAll('.gm25trendrow').forEach((row,i)=>{
-          const rank=row.querySelector('.gm25trendrank');if(rank)rank.textContent=String(i+1);
-        });
-      });
-    }
-  }
   async function refresh(force){
     if(!ready()||busy)return;
-    if(!force&&Date.now()-last<10000){hideUnavailable();return}
+    if(!force&&Date.now()-last<10000)return;
     busy=true;
     try{
       const id=lid(),week=Math.max(1,Number(S.week||1));
       const txWeeks=Array.from({length:week},(_,i)=>i+1);
-      const requests=[get('/league/'+id+'/rosters'),...txWeeks.map(w=>get('/league/'+id+'/transactions/'+w))];
-      const results=await Promise.allSettled(requests);
-      const rosterResult=results[0];
-      const rs=rosterResult.status==='fulfilled'&&Array.isArray(rosterResult.value)?rosterResult.value:null;
+      const results=await Promise.allSettled([
+        get('/league/'+id+'/rosters'),
+        ...txWeeks.map(w=>get('/league/'+id+'/transactions/'+w))
+      ]);
+      const rr=results[0];
+      const rs=rr.status==='fulfilled'&&Array.isArray(rr.value)?rr.value:null;
       if(rs&&rs.length){
         S.rosters=rs;
         if(S.me)S.mine=rs.find(r=>String(r.owner_id)===String(S.me.user_id))||S.mine;
         liveVerified=true;
-      }else{
-        liveVerified=false;
-      }
+      }else liveVerified=false;
       const txLists=results.slice(1).map(x=>x.status==='fulfilled'&&Array.isArray(x.value)?x.value:[]);
       buildOwnership(rs||S.rosters,txLists);
-      last=Date.now();hideUnavailable();
-      try{window.dispatchEvent(new CustomEvent('gm-live-availability',{detail:{teams:[...ownedTeams],verified:liveVerified}}))}catch(e){}
-    }catch(e){liveVerified=false;publish();console.warn('Live availability guard failed',e);hideUnavailable()}
-    finally{busy=false}
+      last=Date.now();
+    }catch(e){
+      liveVerified=false;
+      publish();
+      console.warn('Live availability refresh failed',e);
+    }finally{busy=false}
   }
   window.gmRefreshLiveAvailability=refresh;
   function boot(){
     if(!ready())return;
     seedLocalOwnership();
-    const target=document.getElementById('waiversPage')||document.body;
-    try{new MutationObserver(()=>hideUnavailable()).observe(target,{childList:true,subtree:true});}catch(e){}
     refresh(true);
     setInterval(()=>refresh(false),10000);
   }
