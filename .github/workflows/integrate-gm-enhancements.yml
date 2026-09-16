@@ -1,0 +1,39 @@
+name: Integrate GM Enhancements
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  integrate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Inject enhancement script into index
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('index.html')
+          text = p.read_text(encoding='utf-8')
+          marker = '<script src="gm-enhancements.js"></script>'
+          if marker not in text:
+              text = text.replace('</body>', marker + '\n</body>', 1)
+              p.write_text(text, encoding='utf-8')
+          PY
+
+      - name: Commit integration
+        run: |
+          if git diff --quiet -- index.html; then
+            echo "Enhancement script already integrated"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "Integrate GM enhancement pack"
+          git push
