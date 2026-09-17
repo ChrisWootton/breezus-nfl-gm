@@ -1,4 +1,4 @@
-/* Breezus NFL GM v5.2 loader - matchup + robust defense streaming; Lineup v4.9 untouched */
+/* Breezus NFL GM v5.3 loader - live waiver-only defense; removed unstable v5.0 matchup module */
 (function(){
 'use strict';
 function ready(){try{return typeof S!=='undefined'&&S&&Array.isArray(S.rosters)&&S.rosters.length&&S.players&&Object.keys(S.players).length&&S.me}catch(e){return false}}
@@ -8,8 +8,7 @@ function boot(){var started=Date.now();(function wait(){if(ready()){
     .then(function(){return load('gm-mobile-ui.js')})
     .then(function(){return load('gm-app-v43-fix.js')})
     .then(function(){return load('gm-app-v49-lineup-analyser.js')})
-    .then(function(){return load('gm-app-v50-matchup.js')})
-    .then(function(){return load('gm-app-v52-defense-streamer.js')})
+    .then(function(){return load('gm-app-v53-defense-streamer.js')})
     .then(function(){return load('gm-app-v51-defense-mobile.js')})
     .catch(console.error);
   return;
