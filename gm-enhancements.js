@@ -1,8 +1,8 @@
-/* Breezus NFL GM v5.8 loader - premium dynasty War Room */
+/* Breezus NFL GM v5.9 loader - premium dynasty War Room + readability */
 (function(){
 'use strict';
 function ready(){try{return typeof S!=='undefined'&&S&&Array.isArray(S.rosters)&&S.rosters.length&&S.players&&Object.keys(S.players).length&&S.me}catch(e){return false}}
-function load(src){return new Promise(function(resolve,reject){var s=document.createElement('script');s.src=src+'?v=5.8-'+Date.now();s.onload=resolve;s.onerror=reject;document.head.appendChild(s)})}
+function load(src){return new Promise(function(resolve,reject){var s=document.createElement('script');s.src=src+'?v=5.9-'+Date.now();s.onload=resolve;s.onerror=reject;document.head.appendChild(s)})}
 function boot(){var started=Date.now();(function wait(){if(ready()){
   load('gm-app-v42.js')
     .then(function(){return load('gm-mobile-ui.js')})
@@ -12,6 +12,7 @@ function boot(){var started=Date.now();(function wait(){if(ready()){
     .then(function(){return load('gm-app-v56-defense-nav.js')})
     .then(function(){return load('gm-premium-dynasty-ui.js')})
     .then(function(){return load('gm-dynasty-war-room.js')})
+    .then(function(){return load('gm-v59-readability.js')})
     .catch(console.error);return;
 }if(Date.now()-started<20000)return setTimeout(wait,200);console.error('NFL GM: Sleeper data unavailable')})()}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
