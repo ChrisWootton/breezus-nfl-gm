@@ -1,4 +1,4 @@
-/* Breezus NFL GM v4.6 loader - full current lineup + mobile + authoritative bench */
+/* Breezus NFL GM v4.7 loader - stable GM + mobile + authoritative lineup */
 (function(){
 'use strict';
 function ready(){try{return typeof S!=='undefined'&&S&&Array.isArray(S.rosters)&&S.rosters.length&&S.players&&Object.keys(S.players).length&&S.me}catch(e){return false}}
@@ -7,9 +7,7 @@ function boot(){var started=Date.now();(function wait(){if(ready()){
   load('gm-app-v42.js')
     .then(function(){return load('gm-mobile-ui.js')})
     .then(function(){return load('gm-app-v43-fix.js')})
-    .then(function(){return load('gm-app-v44-fix.js')})
-    .then(function(){return load('gm-app-v45-fix.js')})
-    .then(function(){return load('gm-app-v46-lineup.js')})
+    .then(function(){return load('gm-app-v47-lineup.js')})
     .catch(console.error);
   return;
 }if(Date.now()-started<20000)return setTimeout(wait,200);console.error('NFL GM: Sleeper data unavailable')})()}
