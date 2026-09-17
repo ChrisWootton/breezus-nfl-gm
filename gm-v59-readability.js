@@ -15,7 +15,7 @@ body{color:#f7f9fc!important}
 .hero h1,.hero h2,.hero h3,.hero strong,.hero b,.title h2,.title h3,.title strong,.title b{color:#ffffff!important}
 .hero p,.sub,.meta,.note,.lab,.txmeta{color:#aeb8c7!important}
 
-/* Cards and tables */
+/* Core cards and tables */
 .card,.metrics .card,.page>.card,.page .card{background:#11161e!important;color:#eef2f7!important;border-color:#2d3745!important}
 .card *,.metrics .card *,.page>.card *,.page .card *{border-color:#2d3745}
 th{color:#aeb8c7!important;font-weight:800!important}
@@ -23,6 +23,31 @@ td{color:#edf1f6!important}
 .row{color:#edf1f6!important;border-color:#2d3745!important}
 .row b,.row strong,.row .name,.player-name{color:#ffffff!important}
 .smallbtn{color:#f3f6fa!important;background:#1a202a!important;border-color:#394453!important}
+
+/* v4.9 Lineup analyser: override its old light theme completely */
+#lineup{color:#eef2f7!important}
+#lineup h2{color:#ffffff!important}
+#lineup .gm49-card,#lineup .gm49-position{background:#121821!important;color:#eef2f7!important;border:1px solid #303a48!important;box-shadow:0 8px 24px rgba(0,0,0,.18)!important}
+#lineup .gm49-title b,#lineup .gm49-bench b{color:#ffffff!important;font-size:14px!important;font-weight:900!important}
+#lineup .gm49-meta{color:#aeb8c7!important;font-size:10px!important;opacity:1!important}
+#lineup .gm49-sub{color:#aeb8c7!important}
+#lineup .gm49-reason{color:#d3dae4!important}
+#lineup .gm49-replace{background:#1a212c!important;color:#f0f3f7!important;border:1px solid #303a48!important}
+#lineup .gm49-replace span{color:#aeb8c7!important}
+#lineup .gm49-slot{background:#252e3a!important;color:#dce3ec!important}
+#lineup .gm49-poshead{background:#171e28!important;color:#eef2f7!important;border-bottom:1px solid #303a48!important}
+#lineup .gm49-poshead h3{color:#ffffff!important}
+#lineup .gm49-poshead span{color:#aeb8c7!important}
+#lineup .gm49-bench{border-top:1px solid #303a48!important}
+#lineup .gm49-rank{color:#9da8b8!important}
+#lineup .gm49-bench>strong{color:#ffffff!important}
+#lineup .gm49-muted{color:#aeb8c7!important}
+#lineup .gm49-unavailable .gm49-poshead{background:#24191c!important}
+#lineup .gm49-pill{font-weight:950!important}
+#lineup .gm49-green{background:#10382f!important;color:#71f1c9!important;border:1px solid #1d6655!important}
+#lineup .gm49-amber{background:#3a2d12!important;color:#ffdc79!important;border:1px solid #72591d!important}
+#lineup .gm49-red{background:#3d1d21!important;color:#ff8b94!important;border:1px solid #71343b!important}
+#lineup .gm49-kpi{color:#ffffff!important}
 
 /* Player names: deliberately large and bright */
 .g42-player,.g42-name,.g49-name,.g49-player,.gm-player-name,.player-name,.name{color:#ffffff!important;font-size:14px!important;font-weight:900!important;opacity:1!important}
@@ -69,6 +94,10 @@ td{color:#edf1f6!important}
  .hero h1{font-size:19px!important}
  .hero p{font-size:11px!important;color:#aeb8c7!important}
  .card{font-size:12px!important}
+ #lineup .gm49-title b,#lineup .gm49-bench b{font-size:15px!important}
+ #lineup .gm49-meta{font-size:11px!important}
+ #lineup .gm49-reason{font-size:12px!important;line-height:1.45!important}
+ #lineup .gm49-kpi{font-size:30px!important}
  .gdw-title{font-size:22px!important}.gdw-sub{font-size:11px!important}
  .gdw-name{font-size:13px!important}.gdw-meta{font-size:9px!important}
  .gdw-kpi b{font-size:20px!important}
