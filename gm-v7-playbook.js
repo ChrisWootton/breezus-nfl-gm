@@ -110,6 +110,7 @@ function weeklyPlan(){
  if(!a.length)a.push({title:'Hold and monitor',reason:'No high-confidence move is currently supported by the loaded league data.',cls:'blue',tab:'dash'});
  return a.slice(0,4);
 }
+function gm7Open(id){const p=document.getElementById(id);if(!p)return;document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));p.classList.add('active');document.querySelectorAll('.nav button[data-p]').forEach(x=>x.classList.toggle('active',x.dataset.p===id));window.scrollTo({top:0,behavior:'smooth'})}
 function render(){
  if(!S?.mine||!S?.players||!Object.keys(S.players||{}).length)return;
  css();
@@ -132,13 +133,13 @@ function render(){
  <div class="gm7-grid"><div class="gm7-card"><h3>Dynasty capital</h3><p class="gm7-meta">Future picks currently attributed to your roster</p><div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">${pickHtml}</div></div><div class="gm7-card"><h3>What the GM is protecting</h3><p class="gm7-meta">Do not sell a productive starter solely because you have depth. Trade recommendations are surfaced when the other team has a positional need and your roster has surplus.</p><p class="gm7-meta" style="margin-top:7px">Waiver recommendations are measured by the change to your optimal lineup, not just the player's generic rank.</p></div></div>
  <div class="gm7-actions"><button class="gm7-btn" data-gm7="lineup">LINEUP LAB</button><button class="gm7-btn" data-gm7="waiversPage">WAIVER GM</button><button class="gm7-btn" data-gm7="trades">TRADE FINDER</button><button class="gm7-btn" data-gm7="dynastyPage">DYNASTY</button><button class="gm7-btn" data-gm7="leaguePage">LEAGUE</button></div>
  </div></div>`;
- page.querySelectorAll('[data-gm7]').forEach(b=>b.onclick=()=>activate(b.dataset.gm7));
+ page.querySelectorAll('[data-gm7]').forEach(b=>b.onclick=()=>gm7Open(b.dataset.gm7));
  addNav();
 }
 function addNav(){
  const nav=document.querySelector('.nav');if(!nav||nav.querySelector('[data-p="gm7-playbook"]'))return;
  const b=document.createElement('button');b.type='button';b.dataset.p='gm7-playbook';b.textContent='📘 My Playbook';
- b.onclick=()=>activate('gm7-playbook');
+ b.onclick=()=>gm7Open('gm7-playbook');
  const dash=nav.querySelector('[data-p="dash"]');if(dash)dash.parentNode.insertBefore(b,dash.nextSibling);else nav.prepend(b);
 }
 function boot(){
