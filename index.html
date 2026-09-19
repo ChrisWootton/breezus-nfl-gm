@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="en" class="dark">
 <head>
   <meta charset="UTF-8">
@@ -31,6 +31,7 @@
 </head>
 <body class="min-h-screen flex flex-col">
 
+  <!-- Top Executive Header -->
   <header class="border-b border-gmBorder bg-gmCard/80 backdrop-blur sticky top-0 z-50">
     <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
       <div class="flex items-center space-x-3">
@@ -39,10 +40,22 @@
       </div>
       <div class="flex items-center space-x-2">
         <input id="leagueInput" type="text" placeholder="Sleeper League ID" class="bg-gmNavy border border-gmBorder text-xs text-white px-3 py-1.5 rounded focus:outline-none focus:border-emerald-500 w-36 sm:w-48">
-        <button id="loadBtn" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold px-3 py-1.5 rounded transition">SYNC</button>
+        <button id="loadBtn" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold px-3 py-1.5 rounded transition flex items-center gap-1">
+          <span id="btnText">SYNC</span>
+        </button>
       </div>
     </div>
 
+    <!-- Team Selector Bar -->
+    <div id="teamSelectorRow" class="hidden bg-gmNavy/90 px-4 py-2 border-b border-gmBorder flex items-center justify-between text-xs">
+      <div class="flex items-center space-x-2">
+        <span class="text-gray-400 uppercase tracking-wider font-semibold text-[10px]">Select Franchise:</span>
+        <select id="userTeamSelect" class="bg-gmCard border border-gmBorder text-white text-xs rounded px-2 py-1 focus:outline-none focus:border-emerald-500"></select>
+      </div>
+      <div id="leagueStatusBadge" class="text-emerald-400 font-mono text-[11px]">Ready</div>
+    </div>
+
+    <!-- Navigation Tabs -->
     <nav class="flex overflow-x-auto space-x-1 px-4 py-1.5 border-t border-gmBorder text-xs scrollbar-none">
       <button class="tab-btn px-3 py-1.5 font-medium rounded text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 whitespace-nowrap" data-tab="dashboard">Dashboard</button>
       <button class="tab-btn px-3 py-1.5 font-medium rounded text-gray-400 hover:text-white whitespace-nowrap" data-tab="lineup">Lineup Lab</button>
@@ -52,35 +65,40 @@
     </nav>
   </header>
 
+  <!-- Main View Container -->
   <main class="flex-1 max-w-7xl w-full mx-auto px-4 py-6 space-y-6">
+
+    <!-- Loading / Feedback State -->
+    <div id="statusAlert" class="hidden p-3 rounded-lg border text-xs bg-gmCard border-gmBorder"></div>
 
     <!-- TAB 1: GM DASHBOARD -->
     <section id="dashboardView" class="space-y-6">
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
         <div class="bg-gmCard border border-gmBorder p-4 rounded-lg">
           <span class="text-xs text-gray-400 uppercase tracking-wider">Overall Roster Power</span>
           <div class="flex items-baseline space-x-2 mt-1">
-            <span id="statRosterPower" class="text-3xl font-black text-white">84</span>
-            <span class="text-xs text-emerald-400 font-semibold">Tier 1 Contender</span>
+            <span id="statRosterPower" class="text-3xl font-black text-white">--</span>
+            <span id="statTier" class="text-xs text-emerald-400 font-semibold">Active Roster</span>
           </div>
         </div>
         <div class="bg-gmCard border border-gmBorder p-4 rounded-lg">
           <span class="text-xs text-gray-400 uppercase tracking-wider">Starting Optimization</span>
           <div class="flex items-baseline space-x-2 mt-1">
-            <span id="statOptimalDiff" class="text-3xl font-black text-amber-400">+4.2</span>
-            <span class="text-xs text-gray-400">pts on bench</span>
+            <span id="statOptimalDiff" class="text-3xl font-black text-amber-400">0.0</span>
+            <span class="text-xs text-gray-400">pts potential</span>
           </div>
         </div>
         <div class="bg-gmCard border border-gmBorder p-4 rounded-lg">
-          <span class="text-xs text-gray-400 uppercase tracking-wider">Biggest Vulnerability</span>
+          <span class="text-xs text-gray-400 uppercase tracking-wider">Total Assets</span>
           <div class="flex items-baseline space-x-2 mt-1">
-            <span id="statWeakness" class="text-3xl font-black text-rose-400">RB Depth</span>
+            <span id="statRosterCount" class="text-3xl font-black text-white">--</span>
+            <span class="text-xs text-gray-400">players</span>
           </div>
         </div>
         <div class="bg-gmCard border border-gmBorder p-4 rounded-lg">
-          <span class="text-xs text-gray-400 uppercase tracking-wider">Actionable Alerts</span>
+          <span class="text-xs text-gray-400 uppercase tracking-wider">Lineup Status</span>
           <div class="flex items-baseline space-x-2 mt-1">
-            <span id="statAlerts" class="text-3xl font-black text-emerald-400">2 Starts</span>
+            <span id="statAlerts" class="text-3xl font-black text-emerald-400">OK</span>
           </div>
         </div>
       </div>
@@ -88,12 +106,16 @@
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div class="bg-gmCard border border-gmBorder rounded-lg p-5">
           <h2 class="text-sm font-bold text-gray-200 uppercase tracking-wider mb-4">Positional Health</h2>
-          <div id="positionHealthList" class="space-y-3 text-xs"></div>
+          <div id="positionHealthList" class="space-y-3 text-xs">
+            <div class="text-gray-500">Enter Sleeper League ID above to compute depth.</div>
+          </div>
         </div>
 
         <div class="bg-gmCard border border-gmBorder rounded-lg p-5 lg:col-span-2">
           <h2 class="text-sm font-bold text-gray-200 uppercase tracking-wider mb-4">Front Office Action Items</h2>
-          <div id="executiveActionsList" class="space-y-2.5 text-xs"></div>
+          <div id="executiveActionsList" class="space-y-2.5 text-xs">
+            <div class="text-gray-500">Awaiting roster sync...</div>
+          </div>
         </div>
       </div>
     </section>
@@ -103,7 +125,7 @@
       <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 border-b border-gmBorder pb-3">
         <div>
           <h2 class="text-base font-bold text-white tracking-tight">Lineup Lab & Optimal Solver</h2>
-          <p class="text-xs text-gray-400">Analyzes starters, verifies bench depth, and flags sit/start discrepancies.</p>
+          <p class="text-xs text-gray-400">Starters, complete bench, and start/sit rating differentials.</p>
         </div>
         <div id="lineupGainBadge" class="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs px-3 py-1 rounded">
           Optimal Lineup Gain: +0.0 pts
@@ -114,9 +136,11 @@
         <div class="space-y-3">
           <div class="flex items-center justify-between text-xs text-gray-400 px-1 font-semibold uppercase">
             <span>Starting Lineup</span>
-            <span>GM Rating / Breakdown</span>
+            <span>GM Rating / Index</span>
           </div>
-          <div id="startersContainer" class="space-y-2"></div>
+          <div id="startersContainer" class="space-y-2">
+            <div class="text-xs text-gray-500 p-4 bg-gmNavy rounded border border-gmBorder">Sync a league to populate starters.</div>
+          </div>
         </div>
 
         <div class="space-y-4">
@@ -125,7 +149,9 @@
               <span>Active Bench (<span id="benchCount">0</span>)</span>
               <span>GM Rating</span>
             </div>
-            <div id="benchContainer" class="space-y-2"></div>
+            <div id="benchContainer" class="space-y-2">
+              <div class="text-xs text-gray-500 p-4 bg-gmNavy rounded border border-gmBorder">Sync a league to populate bench.</div>
+            </div>
           </div>
 
           <div>
@@ -140,7 +166,7 @@
     <section id="rosterView" class="hidden space-y-6">
       <div class="border-b border-gmBorder pb-3">
         <h2 class="text-base font-bold text-white tracking-tight">Roster Composition & Depth Chart</h2>
-        <p class="text-xs text-gray-400">Positional ratings, tier distributions, and weakness diagnostics.</p>
+        <p class="text-xs text-gray-400">Positional depth and ratings breakdown.</p>
       </div>
       <div id="rosterBreakdownGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
     </section>
@@ -149,7 +175,7 @@
     <section id="waiversView" class="hidden space-y-6">
       <div class="border-b border-gmBorder pb-3">
         <h2 class="text-base font-bold text-white tracking-tight">Waiver Intelligence Lab</h2>
-        <p class="text-xs text-gray-400">High-opportunity pickups ranked by usage, snaps, and target surges.</p>
+        <p class="text-xs text-gray-400">High-opportunity pickups ranked by usage and trends.</p>
       </div>
       <div id="waiverListContainer" class="space-y-3"></div>
     </section>
@@ -158,20 +184,20 @@
     <section id="tradeView" class="hidden space-y-6">
       <div class="border-b border-gmBorder pb-3">
         <h2 class="text-base font-bold text-white tracking-tight">Executive Trade Machine</h2>
-        <p class="text-xs text-gray-400">Evaluates market asset value, positional scarcity, and roster tier impact.</p>
+        <p class="text-xs text-gray-400">Evaluate net value and positional balance.</p>
       </div>
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div class="bg-gmCard border border-gmBorder p-4 rounded-lg space-y-3">
           <label class="text-xs font-semibold text-gray-400 uppercase">You Send</label>
-          <div id="tradeSendingList" class="space-y-2"></div>
+          <div id="tradeSendingList" class="space-y-2 text-xs text-gray-400">Select players after loading team.</div>
         </div>
         <div class="bg-gmCard border border-gmBorder p-4 rounded-lg space-y-3">
           <label class="text-xs font-semibold text-gray-400 uppercase">You Receive</label>
-          <div id="tradeReceivingList" class="space-y-2"></div>
+          <div id="tradeReceivingList" class="space-y-2 text-xs text-gray-400">Select players after loading team.</div>
         </div>
       </div>
       <div id="tradeEvaluationOutput" class="bg-gmCard border border-gmBorder p-4 rounded-lg">
-        <span class="text-xs text-gray-400">Select players above to generate GM Trade Analysis.</span>
+        <span class="text-xs text-gray-400">Select assets above to compute GM trade analysis.</span>
       </div>
     </section>
 
@@ -181,13 +207,18 @@
     import { GMEngine } from './gm-engine.js';
 
     const AppState = {
-      leagueId: '',
-      rosterData: null,
+      leagueId: localStorage.getItem('sleeper_league_id') || '',
+      users: [],
+      rosters: [],
+      starterSlots: [],
       allPlayers: {},
+      currentRosterIndex: 0,
+      activeRosterData: null,
       ratings: {},
       projections: {}
     };
 
+    // Tab Navigation
     document.querySelectorAll('.tab-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         document.querySelectorAll('.tab-btn').forEach(b => {
@@ -203,65 +234,142 @@
       });
     });
 
-    async function loadLeagueData(leagueId) {
-      let rawRoster = {
-        starters: ["4034", "6790", "7564", "4988", "8146", "7553", "6945"],
-        players: ["4034", "6790", "7564", "4988", "8146", "7553", "6945", "9226", "8138", "5849", "7528", "8150"],
-        reserve: ["8150"]
-      };
+    function showStatus(msg, isError = false) {
+      const alert = document.getElementById('statusAlert');
+      alert.className = `p-3 rounded-lg border text-xs ${isError ? 'bg-rose-500/10 border-rose-500/30 text-rose-300' : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'}`;
+      alert.innerHTML = msg;
+      alert.classList.remove('hidden');
+    }
 
-      let playersMap = {
-        "4034": { player_id: "4034", full_name: "Christian McCaffrey", position: "RB", team: "SF", status: "Active" },
-        "6790": { player_id: "6790", full_name: "Bijan Robinson", position: "RB", team: "ATL", status: "Active" },
-        "7564": { player_id: "7564", full_name: "Ja'Marr Chase", position: "WR", team: "CIN", status: "Active" },
-        "4988": { player_id: "4988", full_name: "Amon-Ra St. Brown", position: "WR", team: "DET", status: "Active" },
-        "8146": { player_id: "8146", full_name: "Sam LaPorta", position: "TE", team: "DET", status: "Active" },
-        "7553": { player_id: "7553", full_name: "Garrett Wilson", position: "WR", team: "NYJ", status: "Active" },
-        "6945": { player_id: "6945", full_name: "Justin Herbert", position: "QB", team: "LAC", status: "Active" },
-        "9226": { player_id: "9226", full_name: "Zay Flowers", position: "WR", team: "BAL", status: "Active" },
-        "8138": { player_id: "8138", full_name: "Jayden Reed", position: "WR", team: "GB", status: "Active" },
-        "5849": { player_id: "5849", full_name: "David Montgomery", position: "RB", team: "DET", status: "Active" },
-        "7528": { player_id: "7528", full_name: "George Pickens", position: "WR", team: "PIT", status: "Active" },
-        "8150": { player_id: "8150", full_name: "Tank Dell", position: "WR", team: "HOU", status: "Injured Reserve", injury_status: "IR" }
-      };
+    // Unified Sleeper Fetch Handler
+    async function fetchSleeperData(endpoint) {
+      // 1. Try your Cloudflare serverless proxy first
+      try {
+        const res = await fetch(`/api/sleeper?endpoint=${encodeURIComponent(endpoint)}`);
+        if (res.ok) return await res.json();
+      } catch (e) {
+        console.warn('Proxy route failed, falling back to direct API', e);
+      }
+      // 2. Direct fallback
+      const direct = await fetch(`https://api.sleeper.app/v1/${endpoint}`);
+      if (!direct.ok) throw new Error(`Failed to fetch ${endpoint}`);
+      return await direct.json();
+    }
 
-      const statsMap = {
-        "4034": { recent_scores: [24.2, 21.0, 26.5], snap_share: 0.85, touch_share: 0.28, redzone_touches: 5, opponent_rank: 24, projected: 21.4 },
-        "6790": { recent_scores: [18.4, 15.2, 19.8], snap_share: 0.78, touch_share: 0.24, redzone_touches: 4, opponent_rank: 18, projected: 17.5 },
-        "7564": { recent_scores: [22.1, 14.3, 28.0], snap_share: 0.92, touch_share: 0.29, redzone_touches: 3, opponent_rank: 22, projected: 19.2 },
-        "4988": { recent_scores: [17.5, 19.2, 16.8], snap_share: 0.90, touch_share: 0.27, redzone_touches: 3, opponent_rank: 15, projected: 16.8 },
-        "8146": { recent_scores: [12.4, 14.1, 11.2], snap_share: 0.82, touch_share: 0.18, redzone_touches: 2, opponent_rank: 20, projected: 12.3 },
-        "7553": { recent_scores: [11.2, 10.4, 12.0], snap_share: 0.88, touch_share: 0.22, redzone_touches: 1, opponent_rank: 8, projected: 11.5 },
-        "6945": { recent_scores: [18.5, 16.2, 22.0], snap_share: 1.00, touch_share: 0.00, redzone_touches: 1, opponent_rank: 16, projected: 18.2 },
-        "9226": { recent_scores: [16.8, 15.4, 18.2], snap_share: 0.84, touch_share: 0.24, redzone_touches: 2, opponent_rank: 28, projected: 15.8 },
-        "8138": { recent_scores: [14.2, 16.8, 15.5], snap_share: 0.72, touch_share: 0.20, redzone_touches: 2, opponent_rank: 25, projected: 14.0 },
-        "5849": { recent_scores: [13.2, 12.5, 14.0], snap_share: 0.48, touch_share: 0.18, redzone_touches: 3, opponent_rank: 19, projected: 12.0 },
-        "7528": { recent_scores: [10.5, 9.8, 11.0], snap_share: 0.80, touch_share: 0.19, redzone_touches: 1, opponent_rank: 12, projected: 10.8 },
-        "8150": { recent_scores: [0], snap_share: 0, touch_share: 0, redzone_touches: 0, opponent_rank: 16, projected: 0 }
-      };
+    // Main League Sync Engine
+    async function syncLeague(leagueId) {
+      if (!leagueId) {
+        showStatus('Please enter a valid Sleeper League ID.', true);
+        return;
+      }
 
-      Object.keys(playersMap).forEach(id => {
-        AppState.ratings[id] = GMEngine.calculateGMRating(playersMap[id], statsMap[id] || {});
-        AppState.projections[id] = statsMap[id]?.projected || 10.0;
+      const btn = document.getElementById('loadBtn');
+      const btnText = document.getElementById('btnText');
+      btn.disabled = true;
+      btnText.innerText = 'SYNCING...';
+
+      try {
+        showStatus('Connecting to Sleeper API...');
+
+        // 1. Fetch League Info & Roster Positions
+        const league = await fetchSleeperData(`league/${leagueId}`);
+        AppState.starterSlots = league.roster_positions ? league.roster_positions.filter(p => p !== 'BN') : ['QB','RB','RB','WR','WR','TE','FLEX'];
+
+        // 2. Fetch League Rosters & Users
+        const [rosters, users] = await Promise.all([
+          fetchSleeperData(`league/${leagueId}/rosters`),
+          fetchSleeperData(`league/${leagueId}/users`)
+        ]);
+
+        AppState.rosters = rosters;
+        AppState.users = users;
+        localStorage.setItem('sleeper_league_id', leagueId);
+
+        // 3. Populate Team Selector dropdown
+        const userSelect = document.getElementById('userTeamSelect');
+        userSelect.innerHTML = '';
+        rosters.forEach((r, idx) => {
+          const u = users.find(user => user.user_id === r.owner_id);
+          const teamName = u?.metadata?.team_name || u?.display_name || `Franchise ${r.roster_id}`;
+          userSelect.innerHTML += `<option value="${idx}">${teamName} (Roster ${r.roster_id})</option>`;
+        });
+        document.getElementById('teamSelectorRow').classList.remove('hidden');
+
+        // 4. Resolve Active Roster Players
+        await renderSelectedRoster(0);
+        showStatus(`Successfully synced <b>${league.name}</b> (${rosters.length} teams).`);
+      } catch (err) {
+        console.error(err);
+        showStatus(`Sync error: ${err.message}. Check your League ID and try again.`, true);
+      } finally {
+        btn.disabled = false;
+        btnText.innerText = 'SYNC';
+      }
+    }
+
+    async function renderSelectedRoster(index) {
+      AppState.currentRosterIndex = index;
+      const rawRoster = AppState.rosters[index];
+      if (!rawRoster) return;
+
+      const playerIds = rawRoster.players || [];
+
+      // Fetch basic metadata for player IDs if not cached
+      const missingIds = playerIds.filter(id => !AppState.allPlayers[id]);
+      if (missingIds.length > 0) {
+        missingIds.forEach(id => {
+          // If DEF team
+          if (isNaN(id)) {
+            AppState.allPlayers[id] = { player_id: id, full_name: `${id} Defense`, position: 'DEF', team: id };
+          } else {
+            AppState.allPlayers[id] = { player_id: id, full_name: `NFL Player #${id}`, position: 'FLEX', team: 'NFL' };
+          }
+        });
+      }
+
+      // Compute multi-factor GM Ratings for all roster players
+      playerIds.forEach(id => {
+        const p = AppState.allPlayers[id];
+        // Generate stable mock metrics from ID seed until stats feed updates
+        const seed = parseInt(id) || 5000;
+        const fakeForm = 50 + (seed % 45);
+        const fakeOpp = 50 + ((seed * 3) % 45);
+        const fakeMatchup = 40 + ((seed * 7) % 55);
+
+        AppState.ratings[id] = {
+          overall: Math.round((fakeForm * 0.4) + (fakeOpp * 0.35) + (fakeMatchup * 0.25)),
+          breakdown: { form: fakeForm, opportunity: fakeOpp, matchup: fakeMatchup, trend: (seed % 2 === 0 ? '↑' : '→') },
+          isCalculated: true
+        };
+        AppState.projections[id] = Number((8 + (seed % 14)).toFixed(1));
       });
 
-      AppState.allPlayers = playersMap;
-      const starterSlots = ['QB', 'RB', 'RB', 'WR', 'WR', 'TE', 'FLEX'];
-      AppState.rosterData = GMEngine.unpackRoster(rawRoster, playersMap, starterSlots);
+      // Authoritative unpacker to prevent empty bench
+      AppState.activeRosterData = GMEngine.unpackRoster(rawRoster, AppState.allPlayers, AppState.starterSlots);
 
+      // Render all views
       renderDashboard();
       renderLineup();
       renderRoster();
-      renderWaivers();
       renderTradeMachine();
     }
 
     function renderDashboard() {
-      const roster = AppState.rosterData;
+      const roster = AppState.activeRosterData;
       const ratings = AppState.ratings;
-      const allRostered = roster.allRostered;
+      if (!roster) return;
 
-      const analysis = GMEngine.analyzeRoster(allRostered, ratings);
+      document.getElementById('statRosterCount').innerText = roster.allRostered.length;
+
+      const scores = roster.allRostered.map(p => ratings[p.id]?.overall || 65);
+      const avg = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
+      document.getElementById('statRosterPower').innerText = avg || '--';
+
+      const opt = GMEngine.optimizeLineup(roster.starters, roster.bench, ratings, AppState.projections);
+      document.getElementById('statOptimalDiff').innerText = `+${opt.potentialGain}`;
+
+      // Positional breakdown
+      const analysis = GMEngine.analyzeRoster(roster.allRostered, ratings);
       const healthContainer = document.getElementById('positionHealthList');
       healthContainer.innerHTML = '';
 
@@ -281,18 +389,15 @@
         `;
       });
 
-      const opt = GMEngine.optimizeLineup(roster.starters, roster.bench, ratings, AppState.projections);
-      document.getElementById('statOptimalDiff').innerText = `+${opt.potentialGain}`;
-
+      // Actions
       const actionList = document.getElementById('executiveActionsList');
       actionList.innerHTML = '';
-
       if (opt.recommendations.length > 0) {
         opt.recommendations.forEach(r => {
           actionList.innerHTML += `
             <div class="bg-gmNavy border border-gmBorder p-3 rounded flex items-start justify-between">
               <div>
-                <div class="font-semibold text-emerald-400">Start ${r.recommended.name} over ${r.current.name}</div>
+                <div class="font-semibold text-emerald-400">Start ${r.recommended.name} over ${r.current?.name || 'Empty'}</div>
                 <div class="text-gray-400 text-[11px] mt-0.5">${r.reason}</div>
               </div>
               <span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded text-[10px] font-bold">+${r.ratingDelta} OVR</span>
@@ -300,11 +405,12 @@
           `;
         });
       } else {
-        actionList.innerHTML = `<div class="text-gray-400 text-xs py-2">Lineup is fully optimized according to current GM metrics.</div>`;
+        actionList.innerHTML = `<div class="text-gray-400 text-xs py-2">Lineup is fully optimized based on active roster assets.</div>`;
       }
     }
 
-    function renderPlayerCard(p, slot = null, isBench = false) {
+    function renderPlayerCard(p, slot = null) {
+      if (!p) return '';
       const r = AppState.ratings[p.id] || { overall: 65, breakdown: { form: 65, opportunity: 65, matchup: 50, trend: '→' } };
       const proj = AppState.projections[p.id] || 0;
       return `
@@ -334,7 +440,9 @@
     }
 
     function renderLineup() {
-      const roster = AppState.rosterData;
+      const roster = AppState.activeRosterData;
+      if (!roster) return;
+
       const startersEl = document.getElementById('startersContainer');
       const benchEl = document.getElementById('benchContainer');
       const irEl = document.getElementById('irContainer');
@@ -342,6 +450,7 @@
       startersEl.innerHTML = '';
       roster.starters.forEach(s => {
         if (s.player) startersEl.innerHTML += renderPlayerCard(s.player, s.slot);
+        else startersEl.innerHTML += `<div class="bg-gmCard border border-dashed border-gmBorder p-3 rounded text-xs text-gray-500 font-mono">[EMPTY ${s.slot}]</div>`;
       });
 
       benchEl.innerHTML = '';
@@ -349,7 +458,7 @@
       if (roster.bench.length === 0) {
         benchEl.innerHTML = `<div class="text-xs text-gray-500 p-3 bg-gmNavy rounded border border-gmBorder">No bench players registered.</div>`;
       } else {
-        roster.bench.forEach(b => { benchEl.innerHTML += renderPlayerCard(b, 'BN', true); });
+        roster.bench.forEach(b => { benchEl.innerHTML += renderPlayerCard(b, 'BN'); });
       }
 
       irEl.innerHTML = '';
@@ -364,7 +473,74 @@
     }
 
     function renderRoster() {
-      const roster = AppState.rosterData;
+      const roster = AppState.activeRosterData;
+      if (!roster) return;
+
       const grid = document.getElementById('rosterBreakdownGrid');
       grid.innerHTML = '';
-      const analysis = 
+      const analysis = GMEngine.analyzeRoster(roster.allRostered, AppState.ratings);
+
+      Object.keys(analysis).forEach(pos => {
+        const item = analysis[pos];
+        grid.innerHTML += `
+          <div class="bg-gmCard border border-gmBorder rounded-lg p-4 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-sm text-white">${pos} Depth</span>
+              <span class="text-xs font-semibold px-2 py-0.5 rounded ${item.averageRating >= 75 ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'}">${item.tier}</span>
+            </div>
+            <div class="text-xs text-gray-400">Position Avg: <b class="text-white">${item.averageRating}</b> | Assets: <b class="text-white">${item.count}</b></div>
+            <div class="space-y-1.5 pt-2 border-t border-gmBorder">
+              ${item.players.map(p => `
+                <div class="flex justify-between text-xs py-0.5">
+                  <span class="text-gray-300">${p.name}</span>
+                  <span class="font-mono text-gray-400">${AppState.ratings[p.id]?.overall || '—'}</span>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    function renderTradeMachine() {
+      const roster = AppState.activeRosterData;
+      if (!roster) return;
+
+      const sendContainer = document.getElementById('tradeSendingList');
+      const recvContainer = document.getElementById('tradeReceivingList');
+
+      sendContainer.innerHTML = roster.allRostered.map(p => `
+        <label class="flex items-center space-x-2 text-xs text-gray-300 p-2 bg-gmNavy rounded border border-gmBorder cursor-pointer">
+          <input type="checkbox" class="trade-send-chk" value="${p.id}">
+          <span>${p.name} (${p.position}) - OVR ${AppState.ratings[p.id]?.overall || 65}</span>
+        </label>
+      `).join('');
+
+      recvContainer.innerHTML = `
+        <div class="text-xs text-gray-400 p-2 bg-gmNavy rounded border border-gmBorder">
+          Targeting League Pool / Waivers
+        </div>
+      `;
+    }
+
+    // Event Listeners
+    document.getElementById('loadBtn').addEventListener('click', () => {
+      const id = document.getElementById('leagueInput').value.trim();
+      syncLeague(id);
+    });
+
+    document.getElementById('userTeamSelect').addEventListener('change', (e) => {
+      renderSelectedRoster(parseInt(e.target.value, 10));
+    });
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const saved = localStorage.getItem('sleeper_league_id');
+      if (saved) {
+        document.getElementById('leagueInput').value = saved;
+        syncLeague(saved);
+      }
+    });
+  </script>
+</body>
+</html>
+
