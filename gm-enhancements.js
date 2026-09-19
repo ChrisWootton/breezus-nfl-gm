@@ -9,6 +9,7 @@ function load(src){return new Promise(function(resolve,reject){var s=document.cr
 function boot(){var started=Date.now();(function wait(){if(ready()){
   load('gm-app-v55-defense-streamer.js')
     .then(function(){return load('gm-app-v56-defense-nav.js')})
+    .then(function(){return load('gm-product-v1.js')})
     .catch(function(e){console.error('NFL GM enhancement load failed',e)});
   return;
 }if(Date.now()-started<20000)return setTimeout(wait,200);console.error('NFL GM: Sleeper data unavailable')})()}
