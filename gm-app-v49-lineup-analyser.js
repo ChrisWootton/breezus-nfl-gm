@@ -72,23 +72,24 @@ function assignmentByIndex(best){
 function currentScore(){return starters().reduce((t,id)=>t+(id&&id!=='0'?proj(id):0),0);}
 function currentMap(){const m={};const st=starters(),ss=slots();ss.forEach((slot,i)=>{m[i]=st[i]&&st[i]!=='0'?st[i]:null;});return m;}
 function currentLegalScore(){
- const m=currentMap(),used=new Set(),score=0;
- Object.entries(m).forEach(([slot,id])=>{
+ const m=currentMap(),used=new Set(),score=0,ss=slots();
+ ss.forEach((slot,i)=>{
+   const id=m[i];
    if(id&&!used.has(id)&&eligible(id,slot)&&!unavailable(id)){score+=proj(id);used.add(id);}
  });
  return score;
 }
 
-function bestReplacement(slot,currentId,bestMap){
- const target=bestMap[slot];
+function bestReplacement(slot,index,currentId,bestMap){
+ const target=bestMap[index];
  if(target&&target!==currentId)return target;
  const used=new Set(Object.values(currentMap()).filter(Boolean));
  return bench().filter(id=>!used.has(id)&&eligible(id,slot)&&!unavailable(id)).sort((a,b)=>proj(b)-proj(a))[0]||null;
 }
-function decision(slot,id,bestMap){
- if(!id)return {label:'EMPTY SLOT',cls:'red',reason:'This starting slot is empty.',rep:bestReplacement(slot,null,bestMap)};
+function decision(slot,index,id,bestMap){
+ if(!id)return {label:'EMPTY SLOT',cls:'red',reason:'This starting slot is empty.',rep:bestReplacement(slot,index,null,bestMap)};
  if(unavailable(id)){
-   const rep=bestReplacement(slot,id,bestMap);
+   const rep=bestReplacement(slot,index,id,bestMap);
    return {label:'REPLACE',cls:'red',reason:`${pname(id)} is marked ${health(id)}. An unavailable starter should not be left in the lineup.`,rep};
  }
  const target=bestMap[slot];
