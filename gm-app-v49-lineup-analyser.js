@@ -1,34 +1,195 @@
-/* Breezus NFL GM v4.9 - bench-only lineup decisions */
+/* Breezus NFL GM v6.0 - reliable lineup decision engine */
 (function(){
 'use strict';
-if(window.__gm49Booted)return; window.__gm49Booted=true;
-const esc=v=>String(v??'').replace(/[&<>\"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[c]));
-const safe=(f,d)=>{try{return f()}catch{return d}};
+if(window.__gm60Booted)return; window.__gm60Booted=true;
+
+const esc=v=>String(v??'').replace(/[&<>\\"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\\"':'&quot;',"'":'&#39;'}[c]));
+const safe=(fn,d)=>{try{return fn()}catch(e){return d}};
 const num=v=>Number.isFinite(Number(v))?Number(v):0;
-function roster(){return safe(()=>S.rosters.find(r=>String(r.owner_id)===String(S.me?.user_id))||S.mine,null)||safe(()=>S.mine,null)}
-function raw(id){return safe(()=>window.player(id),null)||safe(()=>S.players?.[String(id)],{})||{}}
-function pname(id){const p=raw(id);return safe(()=>window.pn(id),null)||p.full_name||[p.first_name,p.last_name].filter(Boolean).join(' ')||String(id)}
-function pos(id){const p=raw(id),x=safe(()=>window.position(id),null)||p.position||'';return ['DST','D/ST','DEFENSE'].includes(String(x).toUpperCase())?'DEF':String(x).toUpperCase()}
-function team(id){return String(raw(id).team||'FA').toUpperCase()}
-function health(id){return String(safe(()=>window.playerStatus(id)?.label,null)||raw(id).status||'AVAILABLE').toUpperCase()}
-function proj(id){return num(safe(()=>window.expectedPoints(id),0))}
-function ids(){return [...new Set((roster()?.players||[]).map(String).filter(Boolean))]}
-function starters(){return (roster()?.starters||[]).map(String).filter(x=>x&&x!=='0')}
-function starterSet(){return new Set(starters())}
-function slots(){return (safe(()=>S.league?.roster_positions,[])||[]).map(String).filter(x=>!['BN','IR','TAXI'].includes(x.toUpperCase()))}
-function bench(){const s=starterSet();return ids().filter(id=>!s.has(id))}
-function unavailable(id){const h=health(id),p=raw(id);return /IR|OUT|PUP|SUSP|INACTIVE|DOUBTFUL/.test(h)||p.injury_status==='IR'||p.injury_status==='OUT'}
-function eligible(id,slot){const p=pos(id),s=String(slot).toUpperCase();if(s==='FLEX')return ['RB','WR','TE'].includes(p);if(s==='SUPER_FLEX')return ['QB','RB','WR','TE'].includes(p);if(s==='REC_FLEX')return ['WR','TE'].includes(p);if(s==='RB/WR')return ['RB','WR'].includes(p);return p===s}
-function optimise(){const candidates=ids().map(id=>({id,v:proj(id),p:pos(id)})).filter(x=>x.p&&!unavailable(x.id));const ss=slots();let best={score:-Infinity,assign:[]};function walk(i,used,a,total){if(i>=ss.length){if(total>best.score)best={score:total,assign:a.slice()};return}const slot=ss[i],cs=candidates.filter(x=>!used.has(x.id)&&eligible(x.id,slot)).sort((a,b)=>b.v-a.v);if(!cs.length){walk(i+1,used,a,total);return}for(const x of cs.slice(0,25)){used.add(x.id);a.push({id:x.id,slot});walk(i+1,used,a,total);a.pop();used.delete(x.id)}}walk(0,new Set(),[],0);return best}
-function statusLabel(id){const h=health(id),v=proj(id);if(unavailable(id))return ['UNAVAILABLE','red'];if(v>=20)return ['ELITE START','green'];if(v>=15)return ['STRONG START','green'];if(v>=10)return ['START / MONITOR','amber'];return ['CONSIDER REPLACING','amber']}
-function currentRows(){const a=starters(),ss=slots();return ss.map((slot,i)=>({slot,id:a[i]&&a[i]!=='0'?a[i]:null}))}
-function bestBenchFor(row){if(!row.id)return null;const candidates=bench().filter(id=>!unavailable(id)&&eligible(id,row.slot));if(!candidates.length)return null;return candidates.sort((a,b)=>proj(b)-proj(a))[0]||null}
-function gmDecision(row){if(!row.id)return {label:'EMPTY',cls:'amber',reason:'No player is currently assigned to this slot.',rep:null};if(unavailable(row.id)){const rep=bestBenchFor(row);return rep?{label:'REPLACE',cls:'red',reason:`${pname(row.id)} is unavailable. Replace with ${pname(rep)}.`,rep}:{label:'REPLACE',cls:'red',reason:`${pname(row.id)} is unavailable and no legal bench replacement is currently available.`,rep:null};}const rep=bestBenchFor(row);if(rep){const gain=proj(rep)-proj(row.id);if(gain>=2)return {label:'REPLACE',cls:'red',reason:`${pname(rep)} projects ${proj(rep).toFixed(1)} vs ${proj(row.id).toFixed(1)} for ${pname(row.id)}.`,rep};if(gain>=0.75)return {label:'CONSIDER REPLACING',cls:'amber',reason:`${pname(rep)} projects ${proj(rep).toFixed(1)} vs ${proj(row.id).toFixed(1)} for ${pname(row.id)}.`,rep};}const sl=statusLabel(row.id);return {label:sl[0],cls:sl[1],reason:'No bench player currently projects enough higher to justify replacing this starter.',rep:null}}
-function card(row){const d=gmDecision(row),id=row.id,rep=d.rep;return `<div class="gm49-card"><div class="gm49-title"><div><span class="gm49-slot">${esc(row.slot)}</span><b>${id?esc(pname(id)):'Empty slot'}</b>${id?`<span class="gm49-meta">${esc(pos(id))} · ${esc(team(id))} · ${proj(id).toFixed(1)} projected · ${esc(health(id))}</span>`:''}</div><span class="gm49-pill gm49-${d.cls}">${esc(d.label)}</span></div><div class="gm49-reason">${esc(d.reason)}</div>${rep?`<div class="gm49-replace"><b>GM MOVE</b><br>${esc(pname(id))} → <strong>${esc(pname(rep))}</strong><br><span>${proj(rep).toFixed(1)} projected vs ${proj(id).toFixed(1)} · ${proj(rep)>=proj(id)?'+':''}${(proj(rep)-proj(id)).toFixed(1)}</span></div>`:''}</div>`}
-function groupedBench(){const groups={QB:[],RB:[],WR:[],TE:[],DEF:[],OTHER:[]};bench().forEach(id=>{const p=pos(id);(groups[p]||groups.OTHER).push(id)});Object.keys(groups).forEach(k=>groups[k].sort((a,b)=>proj(b)-proj(a)));return groups}
-function benchSection(){const g=groupedBench();let html='';['QB','RB','WR','TE','DEF'].forEach(p=>{const arr=g[p].filter(id=>!unavailable(id));html+=`<div class="gm49-position"><div class="gm49-poshead"><h3>${p}</h3><span>${arr.length} available</span></div>${arr.map((id,i)=>`<div class="gm49-bench"><span class="gm49-rank">${i+1}</span><div><b>${esc(pname(id))}</b><span class="gm49-meta">${esc(team(id))} · ${esc(health(id))}</span></div><strong>${proj(id).toFixed(1)}</strong></div>`).join('')||'<div class="gm49-muted">No current bench players.</div>'}</div>`});const unavailablePlayers=bench().filter(unavailable).sort((a,b)=>proj(b)-proj(a));if(unavailablePlayers.length)html+=`<div class="gm49-position gm49-unavailable"><div class="gm49-poshead"><h3>UNAVAILABLE / IR</h3><span>${unavailablePlayers.length}</span></div>${unavailablePlayers.map(id=>`<div class="gm49-bench"><span class="gm49-rank">•</span><div><b>${esc(pname(id))}</b><span class="gm49-meta">${esc(pos(id))} · ${esc(team(id))} · ${esc(health(id))}</span></div><strong>${proj(id).toFixed(1)}</strong></div>`).join('')}</div>`;return html}
-function css(){if(document.getElementById('gm49-style'))return;const s=document.createElement('style');s.id='gm49-style';s.textContent=`#lineup .gm49-wrap{margin-top:10px}.gm49-hero{display:grid;grid-template-columns:1.5fr 1fr;gap:10px}.gm49-kpi{font-size:30px;font-weight:950;line-height:1}.gm49-sub{font-size:10px;color:#746e79;margin-top:5px}.gm49-card,.gm49-position{background:#fff;border:1px solid #e6e0da;border-radius:15px;padding:13px;margin-top:10px}.gm49-title,.gm49-poshead{display:flex;justify-content:space-between;align-items:center;gap:10px}.gm49-slot{background:#f0ece8;border-radius:7px;padding:4px 7px;font-size:9px;font-weight:950;margin-right:7px}.gm49-pill{padding:5px 8px;border-radius:99px;font-size:9px;font-weight:950;white-space:nowrap}.gm49-green{background:#e4faf3;color:#146b55}.gm49-amber{background:#fff1d1;color:#82590e}.gm49-red{background:#fdeaea;color:#9d2929}.gm49-meta{display:block;color:#746e79;font-size:10px;margin-top:3px}.gm49-reason{font-size:11px;color:#4f4951;margin-top:8px;line-height:1.4}.gm49-replace{margin-top:9px;padding:9px;border-radius:10px;background:#f7f4f1;font-size:11px;line-height:1.4}.gm49-replace span{color:#746e79}.gm49-position{padding:0;overflow:hidden}.gm49-poshead{padding:13px;background:#faf9f7}.gm49-poshead h3{margin:0}.gm49-poshead span{font-size:9px;color:#746e79;font-weight:900}.gm49-bench{display:flex;align-items:center;gap:9px;padding:10px 12px;border-top:1px solid #eee9e5}.gm49-bench>strong{margin-left:auto}.gm49-rank{width:18px;color:#746e79;font-size:10px;font-weight:900}.gm49-muted{font-size:11px;color:#746e79;padding:12px}.gm49-unavailable .gm49-poshead{background:#fff5f5}@media(max-width:850px){.gm49-hero{grid-template-columns:1fr}}`;document.head.appendChild(s)}
-function render(){const el=document.getElementById('lineup');if(!el||!roster())return;css();const rows=currentRows(),opt=optimise(),current=rows.reduce((t,r)=>t+(r.id?proj(r.id):0),0),best=opt.score>-Infinity?opt.score:current;const decisions=rows.map(r=>({r,d:gmDecision(r)}));const changes=decisions.filter(x=>x.d.label==='REPLACE'||x.d.label==='CONSIDER REPLACING');const benchGain=changes.reduce((t,x)=>t+Math.max(0,x.d.rep?proj(x.d.rep)-proj(x.r.id):0),0);const recommendations=changes.map(x=>`<div class="gm49-card"><span class="gm49-pill gm49-${x.d.cls}">${x.d.label}</span> <b>${esc(pname(x.r.id))}</b><div class="gm49-reason">${esc(x.d.reason)}</div></div>`).join('');el.innerHTML=`<div class="gm49-wrap"><div class="gm49-hero"><div class="gm49-card"><div class="gm49-meta">GM RECOMMENDATION</div><div class="gm49-kpi">${changes.length?changes.length+' move'+(changes.length===1?'':'s'):'LINEUP OK'}</div><div class="gm49-sub">Current ${current.toFixed(1)} projected · Full-roster optimum ${best.toFixed(1)} · Bench upgrade potential ${benchGain>0?'+'+benchGain.toFixed(1):'0.0'}</div></div><div class="gm49-card"><div class="gm49-meta">ACTUAL BENCH</div><div class="gm49-kpi">${bench().length}</div><div class="gm49-sub">Bench players only are used for replacement advice</div></div></div><h2 style="margin-top:18px">Current Lineup Analysis</h2>${rows.map(card).join('')}<div style="margin-top:20px"><h2>GM Recommendations</h2>${recommendations||'<div class="gm49-card"><b>No immediate bench-based changes recommended.</b><div class="gm49-reason">The current starters are not being compared against other starters. Recommendations only use actual bench players.</div></div>'}</div><div style="margin-top:20px"><h2>Actual Bench by Position</h2><div class="gm49-meta">Each position is sorted by projected points. Unavailable and IR players are separated at the bottom.</div>${benchSection()}</div></div>`}
-function boot(){render();let last='';setInterval(()=>{const r=roster(),sig=JSON.stringify({players:r?.players||[],starters:r?.starters||[],positions:safe(()=>S.league?.roster_positions,[])||[],week:S.week});if(sig!==last){last=sig;render()}else if(document.getElementById('lineup')&&!document.querySelector('#lineup .gm49-wrap'))render()},1500)}
+
+function roster(){return safe(()=>S.rosters.find(r=>String(r.owner_id)===String(S.me?.user_id))||S.mine,null);}
+function raw(id){return safe(()=>window.player(id),null)||safe(()=>S.players?.[String(id)],{})||{};}
+function pname(id){const p=raw(id);return safe(()=>window.pn(id),null)||p.full_name||[p.first_name,p.last_name].filter(Boolean).join(' ')||String(id);}
+function pos(id){const p=raw(id);const x=safe(()=>window.position(id),null)||p.position||'';return String(x).toUpperCase()==='D/ST'?'DEF':String(x).toUpperCase();}
+function team(id){return String(raw(id).team||'FA').toUpperCase();}
+function health(id){return String(safe(()=>window.playerStatus(id)?.label,null)||raw(id).status||raw(id).injury_status||'AVAILABLE').toUpperCase();}
+function proj(id){return num(safe(()=>window.expectedPoints(id),0));}
+function ids(){return [...new Set((roster()?.players||[]).map(String).filter(Boolean))];}
+function starters(){return (roster()?.starters||[]).map(String);}
+function slots(){return (safe(()=>S.league?.roster_positions,[])||[]).map(String).filter(x=>!['BN','IR','TAXI'].includes(x.toUpperCase()));}
+function bench(){const st=new Set(starters().filter(x=>x&&x!=='0'));return ids().filter(id=>!st.has(id));}
+
+function unavailable(id){
+ const h=health(id), p=raw(id);
+ return /\bOUT\b|\bIR\b|\bPUP\b|\bSUSP\b|\bINACTIVE\b|\bDOUBTFUL\b/.test(h)
+   || ['OUT','IR','PUP','SUSP','INACTIVE','DOUBTFUL'].includes(String(p.injury_status||'').toUpperCase());
+}
+function eligible(id,slot){
+ const p=pos(id),s=String(slot).toUpperCase();
+ if(s==='FLEX'||s==='W/R/T'||s==='RB/WR/TE')return ['RB','WR','TE'].includes(p);
+ if(s==='SUPER_FLEX'||s==='S-FLEX'||s==='SUPERFLEX')return ['QB','RB','WR','TE'].includes(p);
+ if(s==='REC_FLEX'||s==='WR/TE')return ['WR','TE'].includes(p);
+ if(s==='RB/WR')return ['RB','WR'].includes(p);
+ if(s==='IDP_FLEX')return ['DL','LB','DB','IDP'].includes(p);
+ return p===s;
+}
+
+function optimise(){
+ const ss=slots();
+ const candidates=ids().map(id=>({id,v:proj(id),p:pos(id)}))
+   .filter(x=>x.p&&x.v>0&&!unavailable(x.id));
+ let best={score:-Infinity,assign:[]};
+
+ // Put restrictive slots first. This prevents FLEX from consuming players needed by fixed slots.
+ const ordered=ss.map((slot,i)=>({slot,i})).sort((a,b)=>{
+   const ac=candidates.filter(x=>eligible(x.id,a.slot)).length;
+   const bc=candidates.filter(x=>eligible(x.id,b.slot)).length;
+   return ac-bc;
+ });
+ function walk(i,used,assign,total){
+   if(i>=ordered.length){
+     if(total>best.score)best={score:total,assign:assign.slice()};
+     return;
+   }
+   const slot=ordered[i].slot;
+   const cs=candidates.filter(x=>!used.has(x.id)&&eligible(x.id,slot)).sort((a,b)=>b.v-a.v).slice(0,30);
+   if(!cs.length){walk(i+1,used,assign,total);return;}
+   for(const x of cs){
+     used.add(x.id);assign.push({id:x.id,slot});
+     walk(i+1,used,assign,total+x.v);
+     assign.pop();used.delete(x.id);
+   }
+ }
+ walk(0,new Set(),[],0);
+ best.assign.sort((a,b)=>ss.indexOf(a.slot)-ss.indexOf(b.slot));
+ return best;
+}
+
+function assignmentBySlot(best){
+ const m={};(best?.assign||[]).forEach(x=>{if(!m[x.slot])m[x.slot]=x.id;});
+ return m;
+}
+function currentScore(){return starters().reduce((t,id)=>t+(id&&id!=='0'?proj(id):0),0);}
+function currentMap(){const m={};const ss=slots(),st=starters();ss.forEach((slot,i)=>{m[slot]=st[i]&&st[i]!=='0'?st[i]:null;});return m;}
+function currentLegalScore(){
+ const m=currentMap(),used=new Set(),score=0;
+ Object.entries(m).forEach(([slot,id])=>{
+   if(id&&!used.has(id)&&eligible(id,slot)&&!unavailable(id)){score+=proj(id);used.add(id);}
+ });
+ return score;
+}
+
+function bestReplacement(slot,currentId,bestMap){
+ const target=bestMap[slot];
+ if(target&&target!==currentId)return target;
+ const used=new Set(Object.values(currentMap()).filter(Boolean));
+ return bench().filter(id=>!used.has(id)&&eligible(id,slot)&&!unavailable(id)).sort((a,b)=>proj(b)-proj(a))[0]||null;
+}
+function decision(slot,id,bestMap){
+ if(!id)return {label:'EMPTY SLOT',cls:'red',reason:'This starting slot is empty.',rep:bestReplacement(slot,null,bestMap)};
+ if(unavailable(id)){
+   const rep=bestReplacement(slot,id,bestMap);
+   return {label:'REPLACE',cls:'red',reason:`${pname(id)} is marked ${health(id)}. An unavailable starter should not be left in the lineup.`,rep};
+ }
+ const target=bestMap[slot];
+ if(target&&target!==id){
+   const gain=proj(target)-proj(id);
+   if(gain>=3)return {label:'MOVE',cls:'red',reason:`${pname(target)} projects ${proj(target).toFixed(1)} vs ${proj(id).toFixed(1)} in this slot.`,rep:target};
+   if(gain>=1)return {label:'CONSIDER',cls:'amber',reason:`${pname(target)} has a ${gain.toFixed(1)} point projection edge in this slot.`,rep:target};
+ }
+ if(/QUESTIONABLE|DOUBTFUL/.test(health(id)))return {label:'MONITOR',cls:'amber',reason:`${pname(id)} is ${health(id)}. Recheck before kickoff.`,rep:null};
+ return {label:'HOLD',cls:'green',reason:'No meaningful legal improvement was found from the current roster.',rep:null};
+}
+
+function css(){
+ if(document.getElementById('gm60-style'))return;
+ const s=document.createElement('style');s.id='gm60-style';
+ s.textContent=`
+ #lineup .gm60-wrap{margin-top:10px}
+ .gm60-hero{display:grid;grid-template-columns:1.5fr 1fr;gap:10px}
+ .gm60-card,.gm60-section{background:#fff;border:1px solid #e6e0da;border-radius:15px;padding:13px;margin-top:10px}
+ .gm60-kpi{font-size:30px;font-weight:950;line-height:1}
+ .gm60-sub,.gm60-meta{font-size:10px;color:#746e79;margin-top:5px}
+ .gm60-title,.gm60-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
+ .gm60-slot{background:#f0ece8;border-radius:7px;padding:4px 7px;font-size:9px;font-weight:950;margin-right:7px}
+ .gm60-pill{padding:5px 8px;border-radius:99px;font-size:9px;font-weight:950;white-space:nowrap}
+ .gm60-green{background:#e4faf3;color:#146b55}.gm60-amber{background:#fff1d1;color:#82590e}.gm60-red{background:#fdeaea;color:#9d2929}.gm60-blue{background:#eaf0ff;color:#294da7}
+ .gm60-reason{font-size:11px;color:#4f4951;margin-top:8px;line-height:1.45}
+ .gm60-move{margin-top:8px;padding:9px;border-radius:10px;background:#f7f4f1;font-size:11px;line-height:1.45}
+ .gm60-row{display:flex;justify-content:space-between;gap:10px;align-items:center;border-top:1px solid #eee9e5;padding:10px 0}
+ .gm60-row:first-child{border-top:0}.gm60-right{text-align:right}.gm60-muted{font-size:11px;color:#746e79}
+ @media(max-width:850px){.gm60-hero{grid-template-columns:1fr}}
+ `;
+ document.head.appendChild(s);
+}
+
+function render(){
+ const el=document.getElementById('lineup');if(!el||!roster())return;
+ css();
+ const best=optimise(), bestMap=assignmentBySlot(best), cmap=currentMap();
+ const legalCurrent=currentLegalScore(), rawCurrent=currentScore();
+ const gain=Math.max(0,best.score-legalCurrent);
+ const decisions=slots().map(slot=>({slot,id:cmap[slot],d:decision(slot,cmap[slot],bestMap)}));
+ const moves=decisions.filter(x=>x.d.label==='MOVE'||x.d.label==='CONSIDER'||x.d.label==='REPLACE'||x.d.label==='EMPTY SLOT');
+ const urgent=decisions.filter(x=>x.d.label==='REPLACE'||x.d.label==='EMPTY SLOT');
+
+ const rows=decisions.map(x=>{
+   const d=x.d,id=x.id,rep=d.rep;
+   return `<div class="gm60-card">
+    <div class="gm60-title"><div><span class="gm60-slot">${esc(x.slot)}</span><b>${id?esc(pname(id)):'Empty'}</b>
+    ${id?`<span class="gm60-meta">${esc(pos(id))} · ${esc(team(id))} · ${proj(id).toFixed(1)} projected · ${esc(health(id))}</span>`:''}</div>
+    <span class="gm60-pill gm60-${d.cls}">${esc(d.label)}</span></div>
+    <div class="gm60-reason">${esc(d.reason)}</div>
+    ${rep&&rep!==id?`<div class="gm60-move"><b>GM MOVE</b><br>${id?esc(pname(id))+' → ':''}<strong>${esc(pname(rep))}</strong><br><span class="gm60-meta">${proj(rep).toFixed(1)} projected${id?' vs '+proj(id).toFixed(1)+' · '+(proj(rep)-proj(id)>=0?'+':'')+(proj(rep)-proj(id)).toFixed(1):''}</span></div>`:''}
+   </div>`;
+ }).join('');
+
+ const bestRows=slots().map(slot=>{
+   const id=bestMap[slot];const current=cmap[slot];
+   return `<div class="gm60-row"><span><span class="gm60-slot">${esc(slot)}</span> <b>${id?esc(pname(id)):'Empty'}</b><br><span class="gm60-meta">${id?esc(pos(id))+' · '+proj(id).toFixed(1)+' projected':''}</span></span>
+   <span class="gm60-pill gm60-${id===current?'green':'blue'}">${id===current?'HOLD':'OPTIMAL'}</span></div>`;
+ }).join('');
+
+ const benchRows=bench().map(id=>({id,v:proj(id)})).sort((a,b)=>b.v-a.v).slice(0,12).map((x,i)=>
+   `<div class="gm60-row"><span><b>${i+1}. ${esc(pname(x.id))}</b><br><span class="gm60-meta">${esc(pos(x.id))} · ${esc(team(x.id))} · ${esc(health(x.id))}</span></span><b>${x.v.toFixed(1)}</b></div>`
+ ).join('');
+
+ el.innerHTML=`<div class="gm60-wrap">
+  <div class="gm60-hero">
+   <div class="gm60-card"><div class="gm60-meta">LINEUP GM</div><div class="gm60-kpi">${urgent.length?urgent.length+' urgent':'LINEUP SET'}</div>
+    <div class="gm60-sub">Current legal projection ${legalCurrent.toFixed(1)} · Optimal ${best.score.toFixed(1)} · Available upside ${gain>0?'+'+gain.toFixed(1):'0.0'}</div>
+   </div>
+   <div class="gm60-card"><div class="gm60-meta">ROSTER CHECK</div><div class="gm60-kpi">${moves.length}</div>
+    <div class="gm60-sub">${urgent.length} urgent · ${moves.length-urgent.length<0?0:moves.length-urgent.length} optimisation calls</div>
+   </div>
+  </div>
+
+  <div class="gm60-section"><div class="gm60-head"><h2 style="margin:0">What I would start</h2><span class="gm60-pill gm60-green">${slots().length} SLOTS</span></div>
+   <div class="gm60-meta">The optimizer respects your Sleeper roster slots, position eligibility, duplicate-player prevention and unavailable-player checks.</div>
+   ${bestRows}
+  </div>
+
+  <h2 style="margin-top:20px">Start / Sit Decisions</h2>
+  ${rows||'<div class="gm60-card">No lineup slots were returned.</div>'}
+
+  <div class="gm60-section"><div class="gm60-head"><h2 style="margin:0">Actual Bench</h2><span class="gm60-pill gm60-blue">${bench().length} PLAYERS</span></div>
+   <div class="gm60-meta">Bench players are ranked by the same projection model used for lineup optimisation.</div>
+   ${benchRows||'<div class="gm60-muted" style="margin-top:10px">No bench players returned.</div>'}
+  </div>
+  ${rawCurrent!==legalCurrent?`<div class="gm60-card"><b>Roster data check</b><div class="gm60-reason">Sleeper's current starter list contains a player in a slot they are not legally eligible for, or an unavailable starter. Breezus calculates the legal current score separately so the improvement figure is not overstated.</div></div>`:''}
+ </div>`;
+}
+
+function boot(){
+ let last='';
+ const tick=()=>{
+   const r=roster();if(!r){setTimeout(tick,1000);return;}
+   const sig=JSON.stringify({players:r.players||[],starters:r.starters||[],slots:S.league?.roster_positions||[],week:S.week,projections:S.projections||{}});
+   if(sig!==last){last=sig;render();}
+   else if(document.getElementById('lineup')&&!document.querySelector('#lineup .gm60-wrap'))render();
+   setTimeout(tick,1500);
+ };
+ tick();
+}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
 })();
