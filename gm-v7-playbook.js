@@ -70,12 +70,13 @@ function waiverPlan(){
  const base=typeof optimiseRoster==='function'?num(optimiseRoster(S.mine).score):0;
  return Object.values(S.players||{}).filter(p=>{
    const id=String(p.player_id||'');
-   return id&&!owned.has(id)&&['QB','RB','WR','TE','DEF','K'].includes(p.position)&&typeof waiverEligible==='function'&&waiverEligible(p,trend.has(id));
+   if(!id||owned.has(id)||!['QB','RB','WR','TE','DEF','K'].includes(p.position))return false;
+   if(p.active===false||p.status==='Inactive')return false;
+   return typeof waiverEligible==='function'?waiverEligible(p,trend.has(id)):true;
  }).map(p=>{
    const id=String(p.player_id),hyp={...S.mine,players:uniq([...(S.mine?.players||[]),id]).filter(x=>x!==String(drop))};
    const after=typeof optimiseRoster==='function'?num(optimiseRoster(hyp).score):base;
-   const gain=after-base,hot=trend.get(id)||0;
-   return{id,gain,hot,drop};
+   return{id,gain:after-base,hot:trend.get(id)||0,drop};
  }).filter(x=>x.gain>.25||x.hot>=3).sort((a,b)=>b.gain-a.gain||b.hot-a.hot).slice(0,5);
 }
 function tradeBoard(){
