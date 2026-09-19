@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -258,6 +258,53 @@
       return await proxyRes.json();
     }
 
+    // Resolves Real Names & Accurate Positions (Using Cloudflare Proxy or Direct Stream)
+    async function loadPlayerNames(playerIds) {
+      // 1. Check local cache first
+      try {
+        const cached = localStorage.getItem('breezus_nfl_players_cache');
+        if (cached) {
+          App.playersMap = JSON.parse(cached);
+          const hasAll = playerIds.every(id => App.playersMap[id] && App.playersMap[id].full_name);
+          if (hasAll) return;
+        }
+      } catch(e) {}
+
+      statusBanner.innerHTML = '<span><i class="fa-solid fa-spinner fa-spin"></i> Resolving real NFL player names & positions...</span>';
+
+      try {
+        // Fetch official Sleeper Player database via your Cloudflare Function proxy or direct
+        let data = await safeFetch('/api/sleeper?endpoint=players/nfl');
+        if (!data || Object.keys(data).length === 0) {
+          data = await safeFetch('https://api.sleeper.app/v1/players/nfl');
+        }
+
+        if (data) {
+          // Store minimal clean map for active positions
+          const clean = {};
+          playerIds.forEach(id => {
+            if (data[id]) {
+              const p = data[id];
+              clean[id] = {
+                full_name: p.full_name || `${p.first_name || ''} ${p.last_name || ''}`.trim(),
+                position: p.position || 'FLEX',
+                team: p.team || 'FA',
+                status: p.status || 'Active',
+                injury_status: p.injury_status || null
+              };
+            }
+          });
+
+          App.playersMap = { ...App.playersMap, ...clean };
+          try {
+            localStorage.setItem('breezus_nfl_players_cache', JSON.stringify(App.playersMap));
+          } catch(e) {}
+        }
+      } catch (err) {
+        console.warn('Full dictionary load failed; falling back to roster slot mapping', err);
+      }
+    }
+
     // Mathematical Unpacker (Solves Empty Bench)
     function unpackRoster(roster) {
       if (!roster) return { starters: [], bench: [], ir: [] };
@@ -266,30 +313,33 @@
       const reserveSet = new Set(roster.reserve || []);
       const starterSet = new Set(startersRaw.filter(id => id && id !== '0'));
 
-      const format = (id) => {
+      const format = (id, fallbackPos = 'FLEX') => {
         const p = App.playersMap[id] || {};
         const isDef = isNaN(id);
         return {
           id: id,
           name: p.full_name || (isDef ? `${id} Defense` : `Player #${id}`),
-          position: p.position || (isDef ? 'DEF' : 'FLEX'),
+          position: p.position || (isDef ? 'DEF' : fallbackPos),
           team: p.team || (isDef ? id : 'NFL'),
           status: p.status || 'Active',
           injury: p.injury_status || null
         };
       };
 
-      const starters = startersRaw.map((id, i) => ({
-        slot: App.starterSlots[i] || 'FLEX',
-        player: id && id !== '0' ? format(id) : null
-      }));
+      const starters = startersRaw.map((id, i) => {
+        const slot = App.starterSlots[i] || 'FLEX';
+        return {
+          slot: slot,
+          player: id && id !== '0' ? format(id, slot === 'FLEX' ? 'FLEX' : slot) : null
+        };
+      });
 
       // Bench: All rostered players NOT starting and NOT on IR
       const bench = playersRaw
         .filter(id => !starterSet.has(id) && !reserveSet.has(id))
-        .map(format);
+        .map(id => format(id, 'FLEX'));
 
-      const ir = Array.from(reserveSet).map(format);
+      const ir = Array.from(reserveSet).map(id => format(id, 'FLEX'));
 
       return { starters, bench, ir };
     }
@@ -348,7 +398,6 @@
       const parsed = unpackRoster(rawRoster);
 
       if (App.activeView === 'lineup') {
-        // Find Start / Sit Optimization Recommendations
         const recs = [];
         let totalGain = 0;
 
@@ -426,7 +475,6 @@
           </div>
         `;
       } else if (App.activeView === 'roster') {
-        // Roster Strength by Position
         const positions = ['QB', 'RB', 'WR', 'TE', 'DEF'];
         mainView.innerHTML = `
           <div class="grid-2">
@@ -440,14 +488,13 @@
                     <span>${pos} Room (${inPos.length})</span>
                     <span style="font-size: 0.85rem; color: var(--accent-green); font-weight: 900;">${avg}/99 OVR</span>
                   </div>
-                  ${inPos.map(p => renderPlayerCard(p, pos)).join('')}
+                  ${inPos.length > 0 ? inPos.map(p => renderPlayerCard(p, pos)).join('') : '<div style="color: var(--text-secondary); font-size: 0.8rem; padding: 6px;">No players assigned.</div>'}
                 </div>
               `;
             }).join('')}
           </div>
         `;
       } else {
-        // Main Executive Dashboard
         const all = [...parsed.starters.filter(s => s.player).map(s => s.player), ...parsed.bench];
         const scores = all.map(p => calcRating(p).ovr);
         const avg = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
@@ -519,6 +566,13 @@
           teamSelector.innerHTML += `<option value="${i}" ${i === App.currentIdx ? 'selected' : ''}>${name} (Roster ${r.roster_id})</option>`;
         });
 
+        // Collect all roster player IDs across the league
+        const targetRoster = App.rosters[App.currentIdx];
+        const playerIds = targetRoster ? targetRoster.players || [] : [];
+
+        // Load real names and positions
+        await loadPlayerNames(playerIds);
+
         statusBanner.innerHTML = `<span><i class="fa-solid fa-check"></i> Connected to <b>${league.name}</b>. All rosters & bench populated.</span>`;
         render();
       } catch (err) {
@@ -529,7 +583,6 @@
 
     boot();
   </script>
-<script src="gm-enhancements.js"></script>
 </body>
 </html>
 
