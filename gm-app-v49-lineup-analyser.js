@@ -150,7 +150,8 @@ function render(){
    <span class="gm60-pill gm60-${id===current?'green':'blue'}">${id===current?'HOLD':'OPTIMAL'}</span></div>`;
  }).join('');
 
- const benchRows=bench().map(id=>({id,v:proj(id)})).sort((a,b)=>b.v-a.v).slice(0,12).map((x,i)=>
+ const benchPlayers=bench().map(id=>({id,v:proj(id)})).sort((a,b)=>b.v-a.v);
+ const benchRows=benchPlayers.map((x,i)=>
    `<div class="gm60-row"><span><b>${i+1}. ${esc(pname(x.id))}</b><br><span class="gm60-meta">${esc(pos(x.id))} · ${esc(team(x.id))} · ${esc(health(x.id))}</span></span><b>${x.v.toFixed(1)}</b></div>`
  ).join('');
 
@@ -169,13 +170,13 @@ function render(){
    ${bestRows}
   </div>
 
+  <div class="gm60-section"><div class="gm60-head"><h2 style="margin:0">Your Bench</h2><span class="gm60-pill gm60-blue">${benchPlayers.length} PLAYERS</span></div>
+   <div class="gm60-meta">These are the actual Sleeper roster players who are not currently starting. They are ranked by projected points.</div>
+   ${benchRows||'<div class="gm60-muted" style="margin-top:10px">Sleeper returned no players outside your current starters.</div>'}
+  </div>
+
   <h2 style="margin-top:20px">Start / Sit Decisions</h2>
   ${rows||'<div class="gm60-card">No lineup slots were returned.</div>'}
-
-  <div class="gm60-section"><div class="gm60-head"><h2 style="margin:0">Actual Bench</h2><span class="gm60-pill gm60-blue">${bench().length} PLAYERS</span></div>
-   <div class="gm60-meta">Bench players are ranked by the same projection model used for lineup optimisation.</div>
-   ${benchRows||'<div class="gm60-muted" style="margin-top:10px">No bench players returned.</div>'}
-  </div>
   ${rawCurrent!==legalCurrent?`<div class="gm60-card"><b>Roster data check</b><div class="gm60-reason">Sleeper's current starter list contains a player in a slot they are not legally eligible for, or an unavailable starter. Breezus calculates the legal current score separately so the improvement figure is not overstated.</div></div>`:''}
  </div>`;
 }
