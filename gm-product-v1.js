@@ -155,10 +155,11 @@ function render(){
 }
 function autoRun(){
  if(window.__gmAutoRun)return;
- if(!S?.mine||!S?.players||!Object.keys(S.players||{}).length)return;
+ const run=$('run');
+ if(!run)return;
  window.__gmAutoRun=true;
  try{
-   if(typeof $('run')?.click==='function' && !S.best) $('run').click();
+   if(!S.best) run.click();
  }catch(e){console.warn('GM auto run',e)}
 }
 function boot(){
