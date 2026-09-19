@@ -27,9 +27,27 @@ function projTeam(t){let total=0;for(const [id,p] of Object.entries(S.players||{
 function rosterDef(){return(roster()?.players||[]).map(String).filter(id=>pos(id)==='DEF'&&TSET.has(team(id))).map(id=>({id,team:team(id),name:pname(id)}))}
 function ownedTeams(){const out=new Set();(S.rosters||[]).forEach(r=>(r.players||[]).forEach(id=>{if(pos(id)==='DEF'&&TSET.has(team(id)))out.add(team(id))}));return out}
 function allDefIds(){const map=new Map();Object.entries(S.players||{}).forEach(([id,p])=>{const t=key(p?.team);if(t&&TSET.has(t)&&pos(id)==='DEF'&&!map.has(t))map.set(t,String(id))});return map}
-function offensiveStrength(t,w){const base=projTeam(t);if(base>0)return Math.max(14,Math.min(38,base*.55+18));let scores=[];for(const g of schedule){const x=fields(g);if(x.week>=w||!x.home||!x.away)continue;if(x.home===key(t)&&Number.isFinite(x.hs))scores.push(x.hs);if(x.away===key(t)&&Number.isFinite(x.as))scores.push(x.as)}return scores.length?scores.reduce((a,v)=>a+v,0)/scores.length:23}
+function offensiveStrength(t,w){
+ const base=projTeam(t);
+ if(base>0)return Math.max(14,Math.min(38,base*.55+18));
+ const vals={QB:0,RB:0,WR:0,TE:0};
+ for(const [id,p] of Object.entries(S.players||{})){
+  if(key(p?.team)!==key(t))continue;
+  const q=String(p?.position||'').toUpperCase();
+  if(!(q in vals))continue;
+  const r=n(p?.search_rank,999);
+  if(r<1||r>400)continue;
+  const weight=q==='QB'?1.7:q==='WR'?1.15:q==='RB'?1.0:.85;
+  vals[q]+=Math.max(0,(401-r)/400)*weight;
+ }
+ const talent=vals.QB*7+Math.min(vals.RB,2.8)*3.5+Math.min(vals.WR,4.5)*2.4+Math.min(vals.TE,1.2)*2.2;
+ let scores=[];
+ for(const g of schedule){const x=fields(g);if(x.week>=w||!x.home||!x.away)continue;if(x.home===key(t)&&Number.isFinite(x.hs))scores.push(x.hs);if(x.away===key(t)&&Number.isFinite(x.as))scores.push(x.as)}
+ const historical=scores.length?scores.reduce((a,v)=>a+v,0)/scores.length:23;
+ return Math.max(14,Math.min(38,18+talent*.65+(historical-23)*.35));
+}
 function defenceStrength(t,w){let allowed=[],taken=[];for(const g of schedule){const x=fields(g);if(x.week>=w||!x.home||!x.away)continue;if(x.home===key(t)&&Number.isFinite(x.hs)&&Number.isFinite(x.as)){taken.push(x.hs);allowed.push(x.as)}if(x.away===key(t)&&Number.isFinite(x.hs)&&Number.isFinite(x.as)){taken.push(x.as);allowed.push(x.hs)}}if(allowed.length)return Math.max(0,Math.min(100,62-(allowed.reduce((a,v)=>a+v,0)/allowed.length-23)*3+(taken.reduce((a,v)=>a+v,0)/taken.length-23)*.5));return 50}
-function expectedOpponent(t,w){const g=gameFor(t,w);if(!g)return 23;const o=opp(g,t),x=fields(g);if(x.total>0&&Number.isFinite(x.spread))return Math.max(10,Math.min(38,x.total/2+(x.home===key(t)?x.spread/2:-x.spread/2)));const model=projTeam(o);if(model>0)return offensiveStrength(o,w);return offensiveStrength(o,w)}
+function expectedOpponent(t,w){const g=gameFor(t,w);if(!g)return 23;const o=opp(g,t),x=fields(g);if(x.total>0&&Number.isFinite(x.spread))return Math.max(10,Math.min(38,x.total/2+(x.home===key(t)?x.spread/2:-x.spread/2)));return offensiveStrength(o,w)}
 function score(t,id,w){const g=gameFor(t,w);if(!g)return null;const x=fields(g),o=opp(g,t),oppPts=expectedOpponent(t,w),def=defenceStrength(t,w),dp=proj(id);const matchup=Math.max(0,Math.min(100,100-(oppPts-14)*4.5));const home=x.home===key(t)?6:0;const defProj=dp>0?Math.max(0,Math.min(100,35+dp*5)):Math.max(35,Math.min(80,55-(oppPts-23)*2.5));const value=Math.round(Math.max(0,Math.min(100,matchup*.55+def*.22+defProj*.16+home)));return{team:key(t),id,name:pname(id),opp:o,home:x.home===key(t),oppPts,proj:dp,score:value,start:startMs(g)}}
 async function fetchJson(url){const c=new AbortController(),timer=setTimeout(()=>c.abort(),9000);try{const r=await fetch(url,{cache:'no-store',signal:c.signal});if(!r.ok)throw Error('HTTP '+r.status);return await r.json()}finally{clearTimeout(timer)}}
 async function load(){if(loaded||loading||!ready())return;loading=true;const w=week();try{const data=await fetchJson('/api/nfl-schedule?season='+season());schedule=Array.isArray(data)?data:(data?.games||data?.schedule||[]);research={};for(const wk of[w,w+1,w+2]){try{const r=await fetchJson('/api/research?season='+season()+'&week='+wk);Object.assign(research,r?.projections||{})}catch(e){}}loaded=true}catch(e){console.warn('DEF v5.5 load failed',e)}finally{loading=false;render()}}
