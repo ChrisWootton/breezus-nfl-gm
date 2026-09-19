@@ -2,7 +2,7 @@
 <html lang="en" class="dark">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>BREEZUS // NFL GM Command Center</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -29,7 +29,7 @@
 </head>
 <body class="min-h-screen flex flex-col antialiased">
 
-  <!-- Header -->
+  <!-- Executive Header -->
   <header class="border-b border-gmBorder bg-gmCard/90 backdrop-blur sticky top-0 z-50">
     <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
       <div class="flex items-center space-x-3">
@@ -37,26 +37,33 @@
         <h1 class="text-base font-black text-white tracking-tight">BREEZUS <span class="text-xs text-gray-400 font-semibold ml-1">WAR ROOM</span></h1>
       </div>
       <div class="flex items-center space-x-2">
-        <select id="userTeamSelect" class="bg-gmNavy border border-gmBorder text-xs text-white px-2.5 py-1.5 rounded focus:outline-none focus:border-emerald-500 max-w-[170px] truncate">
-          <option>Loading League...</option>
-        </select>
-        <button id="refreshBtn" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-3 py-1.5 rounded transition">SYNC</button>
+        <input id="leagueInput" type="text" placeholder="18-digit League ID" class="bg-gmNavy border border-gmBorder text-xs text-white px-2.5 py-1.5 rounded focus:outline-none focus:border-emerald-500 w-36 sm:w-48 font-mono">
+        <button id="syncBtn" class="bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white text-xs font-bold px-3 py-1.5 rounded transition tracking-wider">SYNC</button>
       </div>
     </div>
 
-    <!-- Mobile Nav Tabs -->
-    <nav class="flex overflow-x-auto space-x-1 px-4 py-1.5 border-t border-gmBorder text-xs scrollbar-none">
+    <!-- Team Selector Row -->
+    <div id="teamSelectorRow" class="bg-gmNavy px-4 py-2 border-t border-gmBorder flex flex-wrap items-center justify-between gap-2 text-xs">
+      <div class="flex items-center space-x-2">
+        <span class="text-gray-400 uppercase font-semibold text-[10px] tracking-wider">Franchise:</span>
+        <select id="userTeamSelect" class="bg-gmCard border border-gmBorder text-white text-xs rounded px-2 py-1 focus:outline-none focus:border-emerald-500 max-w-[220px] truncate">
+          <option>Enter League ID Above</option>
+        </select>
+      </div>
+      <div id="statusBadge" class="text-gray-400 font-mono text-[11px]">Ready</div>
+    </div>
+
+    <!-- Nav Tabs -->
+    <nav class="flex overflow-x-auto space-x-1 px-4 py-1.5 border-t border-gmBorder text-xs scrollbar-none bg-gmCard/50">
       <button class="tab-btn px-3 py-1.5 font-bold rounded text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 whitespace-nowrap" data-tab="dashboard">Dashboard</button>
       <button class="tab-btn px-3 py-1.5 font-medium rounded text-gray-400 hover:text-white whitespace-nowrap" data-tab="lineup">Lineup Lab</button>
       <button class="tab-btn px-3 py-1.5 font-medium rounded text-gray-400 hover:text-white whitespace-nowrap" data-tab="roster">Roster Strength</button>
-      <button class="tab-btn px-3 py-1.5 font-medium rounded text-gray-400 hover:text-white whitespace-nowrap" data-tab="waivers">Waivers</button>
+      <button class="tab-btn px-3 py-1.5 font-medium rounded text-gray-400 hover:text-white whitespace-nowrap" data-tab="waivers">Waiver Lab</button>
     </nav>
   </header>
 
-  <!-- Status Banner -->
-  <div id="loadingBanner" class="bg-emerald-500/10 border-b border-emerald-500/20 px-4 py-2 text-xs text-emerald-400 text-center font-mono">
-    Connecting to Sleeper & Fetching NFL Roster...
-  </div>
+  <!-- Notification Banner -->
+  <div id="statusBanner" class="hidden px-4 py-2 text-xs text-center font-mono border-b"></div>
 
   <main class="flex-1 max-w-7xl w-full mx-auto px-4 py-5 space-y-6">
 
@@ -67,21 +74,21 @@
           <div class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Roster Power</div>
           <div class="flex items-baseline space-x-2 mt-1">
             <span id="statPower" class="text-3xl font-black text-white badge-num">--</span>
-            <span id="statTier" class="text-xs text-emerald-400 font-bold">--</span>
+            <span id="statTier" class="text-xs text-emerald-400 font-bold">Contender</span>
           </div>
         </div>
         <div class="bg-gmCard border border-gmBorder p-4 rounded-xl">
-          <div class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Optimal Lineup Edge</div>
+          <div class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Start/Sit Edge</div>
           <div class="flex items-baseline space-x-2 mt-1">
             <span id="statOptimalDiff" class="text-3xl font-black text-amber-400 badge-num">+0.0</span>
-            <span class="text-xs text-gray-400">pts</span>
+            <span class="text-xs text-gray-400">pts gain</span>
           </div>
         </div>
         <div class="bg-gmCard border border-gmBorder p-4 rounded-xl">
-          <div class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Total Players</div>
+          <div class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Total Assets</div>
           <div class="flex items-baseline space-x-2 mt-1">
             <span id="statRosterCount" class="text-3xl font-black text-white badge-num">--</span>
-            <span class="text-xs text-gray-400">assets</span>
+            <span class="text-xs text-gray-400">players</span>
           </div>
         </div>
         <div class="bg-gmCard border border-gmBorder p-4 rounded-xl">
@@ -95,11 +102,15 @@
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
         <div class="bg-gmCard border border-gmBorder rounded-xl p-4">
           <h2 class="text-xs font-bold text-gray-300 uppercase tracking-wider mb-3">Position Health</h2>
-          <div id="positionMeters" class="space-y-3 text-xs"></div>
+          <div id="positionMeters" class="space-y-3 text-xs">
+            <div class="text-gray-500 py-6 text-center">Sync your Sleeper League to evaluate depth.</div>
+          </div>
         </div>
         <div class="bg-gmCard border border-gmBorder rounded-xl p-4 lg:col-span-2">
           <h2 class="text-xs font-bold text-gray-300 uppercase tracking-wider mb-3">Start / Sit Recommendations</h2>
-          <div id="executiveActionsList" class="space-y-2.5 text-xs"></div>
+          <div id="executiveActionsList" class="space-y-2.5 text-xs">
+            <div class="text-gray-500 py-6 text-center">No alerts active.</div>
+          </div>
         </div>
       </div>
     </section>
@@ -109,7 +120,7 @@
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gmBorder pb-3">
         <div>
           <h2 class="text-base font-bold text-white tracking-tight">Lineup Lab & Optimal Solver</h2>
-          <p class="text-xs text-gray-400">Starters, full bench, and start/sit ratings.</p>
+          <p class="text-xs text-gray-400">Complete starters and bench breakdown with mathematical start/sit ratings.</p>
         </div>
         <div id="lineupGainBadge" class="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs px-3 py-1 rounded-full font-bold">
           Optimization Potential: +0.0 pts
@@ -151,7 +162,7 @@
       <div id="rosterGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
     </section>
 
-    <!-- TAB 4: WAIVERS -->
+    <!-- TAB 4: WAIVER LAB -->
     <section id="waiversView" class="hidden space-y-6">
       <div class="border-b border-gmBorder pb-3">
         <h2 class="text-base font-bold text-white tracking-tight">Waiver Intelligence Lab</h2>
@@ -162,20 +173,19 @@
 
   </main>
 
-  <!-- Self-Contained Engine Script -->
   <script>
-    const LEAGUE_ID = '131204730021373952';
     const AppState = {
+      leagueId: localStorage.getItem('sleeper_league_id') || '',
       users: [],
       rosters: [],
       players: {},
       selectedRoster: null,
-      starterSlots: ['QB', 'RB', 'RB', 'WR', 'WR', 'TE', 'FLEX'],
+      starterSlots: ['QB', 'RB', 'RB', 'WR', 'WR', 'TE', 'FLEX', 'K', 'DEF'],
       ratings: {},
       projections: {}
     };
 
-    // Tab Navigation
+    // Tabs
     document.querySelectorAll('.tab-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         document.querySelectorAll('.tab-btn').forEach(b => {
@@ -191,7 +201,29 @@
       });
     });
 
-    // Authoritative Roster Unpacker (Fixes Empty Bench Bug)
+    function setStatus(msg, isErr = false) {
+      const banner = document.getElementById('statusBanner');
+      banner.className = `px-4 py-2 text-xs text-center font-mono border-b ${isErr ? 'bg-rose-500/10 border-rose-500/30 text-rose-400' : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'}`;
+      banner.innerHTML = msg;
+      banner.classList.remove('hidden');
+    }
+
+    // Safe Sleeper Fetcher (via your Cloudflare Function or direct API)
+    async function safeFetch(url) {
+      try {
+        const res = await fetch(url);
+        if (res.ok) return await res.json();
+      } catch (e) {
+        console.warn('Direct fetch failed, retrying via proxy:', url);
+      }
+      // Cloudflare Function proxy fallback
+      const proxyUrl = `/api/sleeper?endpoint=${encodeURIComponent(url.replace('https://api.sleeper.app/v1/', ''))}`;
+      const proxyRes = await fetch(proxyUrl);
+      if (!proxyRes.ok) throw new Error('API query failed');
+      return await proxyRes.json();
+    }
+
+    // Unpack Roster & Fix Empty Bench
     function unpackRoster(roster, allPlayers, starterSlots) {
       const startersRaw = roster.starters || [];
       const allPlayerIds = roster.players || [];
@@ -203,9 +235,9 @@
         const p = allPlayers[id] || {};
         return {
           id: id,
-          name: p.full_name || (isNaN(id) ? `${id} DEF` : `Player #${id}`),
+          name: p.full_name || (isNaN(id) ? `${id} Defense` : `NFL Player #${id}`),
           position: p.position || (isNaN(id) ? 'DEF' : 'FLEX'),
-          team: p.team || (isNaN(id) ? id : 'FA'),
+          team: p.team || (isNaN(id) ? id : 'NFL'),
           status: p.status || 'Active',
           injuryStatus: p.injury_status || null
         };
@@ -217,7 +249,6 @@
         player: id && id !== '0' ? format(id) : null
       }));
 
-      // Bench is strictly every rostered player NOT starting, NOT on IR, and NOT taxi
       const bench = allPlayerIds
         .filter(id => !starterSet.has(id) && !reserveSet.has(id) && !taxiSet.has(id))
         .map(format);
@@ -228,7 +259,6 @@
       return { starters, bench, ir, allRostered };
     }
 
-    // Transparent GM Rating Calculation
     function calculateGMRating(p) {
       const hash = (p.id.split('').reduce((a, c) => a + c.charCodeAt(0), 0) * 19) % 100;
       const form = 55 + (hash % 40);
@@ -247,59 +277,78 @@
       };
     }
 
-    async function initApp() {
-      const banner = document.getElementById('loadingBanner');
+    async function syncLeague(leagueId) {
+      if (!leagueId) {
+        setStatus('Please enter your 18-digit Sleeper League ID in the box above.', true);
+        return;
+      }
+
+      setStatus('Connecting to Sleeper API...');
       try {
-        banner.innerText = 'Connecting to Sleeper API & pulling rosters...';
+        const league = await safeFetch(`https://api.sleeper.app/v1/league/${leagueId}`);
+        if (!league) throw new Error('League not found. Double-check your 18-digit League ID.');
 
-        // 1. Fetch League Rosters and Users directly
-        const [leagueRes, rostersRes, usersRes] = await Promise.all([
-          fetch(`https://api.sleeper.app/v1/league/${LEAGUE_ID}`),
-          fetch(`https://api.sleeper.app/v1/league/${LEAGUE_ID}/rosters`),
-          fetch(`https://api.sleeper.app/v1/league/${LEAGUE_ID}/users`)
-        ]);
-
-        const league = await leagueRes.json();
-        const rosters = await rostersRes.json();
-        const users = await usersRes.json();
-
-        AppState.users = users;
-        AppState.rosters = rosters;
         if (league.roster_positions) {
           AppState.starterSlots = league.roster_positions.filter(s => s !== 'BN');
         }
 
-        // 2. Fetch Player Names Dictionary
-        banner.innerText = 'Resolving NFL player names and active depth charts...';
+        const [rosters, users] = await Promise.all([
+          safeFetch(`https://api.sleeper.app/v1/league/${leagueId}/rosters`),
+          safeFetch(`https://api.sleeper.app/v1/league/${leagueId}/users`)
+        ]);
+
+        AppState.leagueId = leagueId;
+        AppState.rosters = rosters || [];
+        AppState.users = users || [];
+        localStorage.setItem('sleeper_league_id', leagueId);
+
+        // Fetch Official Player Names Dictionary
+        setStatus('Resolving NFL active player names and rosters...');
         try {
-          const playersRes = await fetch('https://api.sleeper.app/v1/players/nfl');
-          if (playersRes.ok) {
-            AppState.players = await playersRes.json();
+          const cached = localStorage.getItem('sleeper_players_cache');
+          if (cached) {
+            AppState.players = JSON.parse(cached);
+          } else {
+            const playersData = await safeFetch('https://api.sleeper.app/v1/players/nfl');
+            if (playersData) {
+              AppState.players = playersData;
+              // Cache lightweight slice
+              const light = {};
+              Object.keys(playersData).forEach(k => {
+                const p = playersData[k];
+                if (p.active && ['QB','RB','WR','TE','K','DEF'].includes(p.position)) {
+                  light[k] = { full_name: p.full_name || `${p.first_name} ${p.last_name}`, position: p.position, team: p.team, status: p.status, injury_status: p.injury_status };
+                }
+              });
+              try { localStorage.setItem('sleeper_players_cache', JSON.stringify(light)); } catch(e){}
+            }
           }
         } catch (e) {
-          console.warn('Player dictionary fetch skipped, using fallback.');
+          console.warn('Player dictionary fallback', e);
         }
 
-        // 3. Populate Franchise Dropdown & Auto-Select BreezusChrist (Roster 2)
+        // Populate Franchise dropdown and auto-select BreezusChrist
         const select = document.getElementById('userTeamSelect');
         select.innerHTML = '';
-        let targetIndex = 0;
+        let targetIdx = 0;
 
-        rosters.forEach((r, idx) => {
-          const user = users.find(u => u.user_id === r.owner_id);
-          const name = user?.metadata?.team_name || user?.display_name || `Team ${r.roster_id}`;
+        AppState.rosters.forEach((r, idx) => {
+          const u = AppState.users.find(user => user.user_id === r.owner_id);
+          const name = u?.metadata?.team_name || u?.display_name || `Franchise ${r.roster_id}`;
           if (name.toLowerCase().includes('breezus') || r.roster_id === 2) {
-            targetIndex = idx;
+            targetIdx = idx;
           }
           select.innerHTML += `<option value="${idx}">${name} (Roster ${r.roster_id})</option>`;
         });
 
-        select.value = targetIndex;
-        loadFranchise(targetIndex);
-        banner.classList.add('hidden');
+        select.value = targetIdx;
+        loadFranchise(targetIdx);
+        setStatus(`Synchronized <b>${league.name}</b> successfully.`);
+        document.getElementById('statusBadge').innerText = 'LIVE';
+        document.getElementById('statusBadge').className = 'text-emerald-400 font-mono text-[11px] font-bold';
       } catch (err) {
-        banner.innerText = `Sync Error: ${err.message}. Tap SYNC to retry.`;
-        banner.className = 'bg-rose-500/10 border-b border-rose-500/20 px-4 py-2 text-xs text-rose-400 text-center font-mono';
+        console.error(err);
+        setStatus(`Sync Error: ${err.message}`, true);
       }
     }
 
@@ -310,7 +359,6 @@
       const unpacked = unpackRoster(rawRoster, AppState.players, AppState.starterSlots);
       AppState.selectedRoster = unpacked;
 
-      // Compute ratings
       unpacked.allRostered.forEach(p => {
         const rating = calculateGMRating(p);
         AppState.ratings[p.id] = rating;
@@ -384,7 +432,7 @@
               <div class="bg-gmNavy border border-gmBorder p-3 rounded-lg flex items-start justify-between">
                 <div>
                   <div class="font-bold text-emerald-400">Start ${b.name} over ${slot.player.name}</div>
-                  <div class="text-gray-400 text-[11px] mt-0.5">${b.name} provides superior form and target volume (+${benchR - currentR} OVR).</div>
+                  <div class="text-gray-400 text-[11px] mt-0.5">${b.name} provides superior form and volume (+${benchR - currentR} OVR).</div>
                 </div>
                 <span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[10px] font-black px-2 py-0.5 rounded font-mono">+${benchR - currentR} OVR</span>
               </div>
@@ -496,8 +544,8 @@
     function renderWaivers() {
       const list = document.getElementById('waiversList');
       const mockWaivers = [
-        { name: "Bucky Irving", pos: "RB", team: "TB", snap: "64%", note: "Usage surge in red zone" },
-        { name: "Tucker Kraft", pos: "TE", team: "GB", snap: "82%", note: "Every-down route participation" }
+        { name: "Bucky Irving", pos: "RB", team: "TB", snap: "64%", note: "High redzone touch share" },
+        { name: "Tucker Kraft", pos: "TE", team: "GB", snap: "82%", note: "Every-down TE snap participation" }
       ];
       list.innerHTML = mockWaivers.map(w => `
         <div class="bg-gmCard border border-gmBorder p-3.5 rounded-xl flex items-center justify-between">
@@ -510,14 +558,22 @@
       `).join('');
     }
 
+    document.getElementById('syncBtn').addEventListener('click', () => {
+      const id = document.getElementById('leagueInput').value.trim();
+      syncLeague(id);
+    });
+
     document.getElementById('userTeamSelect').addEventListener('change', (e) => {
       loadFranchise(parseInt(e.target.value, 10));
     });
 
-    document.getElementById('refreshBtn').addEventListener('click', initApp);
-
-    window.addEventListener('DOMContentLoaded', initApp);
+    window.addEventListener('DOMContentLoaded', () => {
+      const saved = localStorage.getItem('sleeper_league_id');
+      if (saved) {
+        document.getElementById('leagueInput').value = saved;
+        syncLeague(saved);
+      }
+    });
   </script>
-<script src="gm-enhancements.js"></script>
 </body>
 </html>
