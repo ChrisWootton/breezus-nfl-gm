@@ -23,6 +23,7 @@ function options(ids){return uniq(ids).filter(id=>['QB','RB','WR','TE','DEF','K'
 function selected(id){return [...($(id)?.selectedOptions||[])].map(o=>String(o.value)).slice(0,2)}
 function rosterAfter(roster,give,get){return {...roster,players:uniq([...(roster.players||[]).filter(id=>!give.includes(String(id))),...get])}}
 function analyse(){
+ if(typeof S==='undefined'||!S.mine||!S.rosters){return}
  const otherId=$('gm7ta-team')?.value;
  const other=(S.rosters||[]).find(r=>String(r.roster_id)===String(otherId));
  if(!other){$('gm7ta-result').innerHTML='<b>Select a league mate first.</b>';return}
@@ -43,7 +44,7 @@ function analyse(){
  $('gm7ta-result').innerHTML=`<div><span class="pill ${cls}">${verdict}</span> <b style="margin-left:6px">${esc(fairness)}</b></div><div class="gm7ta-cols"><div class="gm7ta-k"><b>${weekly>=0?'+':''}${weekly.toFixed(1)}</b><span>Your weekly lineup impact</span></div><div class="gm7ta-k"><b>${dyn>=0?'+':''}${dyn.toFixed(0)}</b><span>Your dynasty value swing</span></div><div class="gm7ta-k"><b>${oppWeekly>=0?'+':''}${oppWeekly.toFixed(1)}</b><span>Their weekly impact</span></div></div><p class="note" style="margin-top:9px"><b>You send:</b> ${give.map(name).map(esc).join(', ')}<br><b>You receive:</b> ${get.map(name).map(esc).join(', ')}<br><b>GM read:</b> ${weekly>=1?'The move improves your optimal lineup. ':'The move does not improve your optimal lineup enough to justify itself on the current weekly model. '}${dyn>=0?'The dynasty asset balance is in your favour or neutral.':'You are giving up more dynasty value than you receive.'}</p><p class="meta">This analyzer models roster impact from the current Breezus player model. It does not know private trade offers, manager preferences or unreturned draft-pick details.</p>`;
 }
 function render(){
- if(!S?.mine||!S?.players||!Object.keys(S.players||{}).length)return;
+ if(!S||!S.mine||!S?.players||!Object.keys(S.players||{}).length)return;
  css();const page=$('trades');if(!page)return;
  let box=$('gm7-trade-analyzer');
  if(!box){box=document.createElement('div');box.id='gm7-trade-analyzer';page.insertBefore(box,page.firstChild)}
