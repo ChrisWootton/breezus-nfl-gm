@@ -199,7 +199,7 @@ function gmProjection(id){
  return Math.max(0,Number(v.toFixed(2)));
 }
 function eligible(id,slot){const pos=position(id);if(slot==='FLEX')return ['RB','WR','TE'].includes(pos);if(slot==='SUPER_FLEX'||slot==='S-FLEX')return ['QB','RB','WR','TE'].includes(pos);if(slot==='REC_FLEX')return ['WR','TE'].includes(pos);if(slot==='IDP_FLEX')return ['DL','LB','DB'].includes(pos);if(slot==='DEF')return ['DEF','DST'].includes(pos)||player(id).position==='DEF';return pos===slot}
-function rosterSlots(){const rp=S.league?.roster_positions||S.league?.settings?.roster_positions;return Array.isArray(rp)&&rp.length?rp:['QB','RB','RB','WR','WR','TE','FLEX','DEF']}
+function rosterSlots(){const rp=S.league?.roster_positions||S.league?.settings?.roster_positions;const slots=Array.isArray(rp)&&rp.length?rp:['QB','RB','RB','WR','WR','TE','FLEX','DEF'];return slots.map(String).filter(s=>!['BN','IR','TAXI','RESERVE'].includes(s.toUpperCase()))}
 const EXPERT={
 "4881":1,"11560":9,"12508":11,"9509":2,"8138":6,"6790":19,"11589":999,"12469":47,"12534":29,"7567":31,"13288":54,
 "10229":19,"6786":6,"8146":20,"7526":16,"5846":32,"5872":53,"2216":26,"8142":35,"12484":75,"12535":999,"12536":999,"13274":999,"13279":34,"13320":76,"13330":24,"10236":9,"11604":999,
@@ -434,6 +434,7 @@ function renderAlerts(){
  $('alerts').innerHTML=a.join('');$('alertPill').textContent=a.length+' checks';$('alertPill2').textContent=a.length+' alerts';
 }
 function renderLineup(){
+ if(window.__gm60Booted)return;
  const oldBoard=document.getElementById('flexDecisionBoard'); if(oldBoard) oldBoard.remove();
  const best=S.best||optimise(), current=(S.mine.starters||[]).filter(Boolean), gain=best.score-current.reduce((t,id)=>t+expectedPoints(id),0);
  $('lineupSummary').innerHTML=`<div class="statgrid"><div class="mini"><div class="kpi">Best model score</div><b>${best.score.toFixed(1)}</b></div><div class="mini"><div class="kpi">Current score</div><b>${current.reduce((t,id)=>t+expectedPoints(id),0).toFixed(1)}</b></div><div class="mini"><div class="kpi">Potential gain</div><b>${gain>=0?'+':''}${gain.toFixed(1)}</b></div><div class="mini"><div class="kpi">Slots</div><b>${rosterSlots().length}</b></div></div><p class="note"><b>League setup:</b> ${esc(userSlotsSummary())}</p>`;
