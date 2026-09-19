@@ -12,6 +12,7 @@ function boot(){var started=Date.now();(function wait(){if(ready()){
     .then(function(){return load('gm-app-v56-defense-nav.js')})
     .then(function(){return load('gm-premium-dynasty-ui.js')})
     .then(function(){return load('gm-v60-war-room.js')})
+    .then(function(){return load('gm-v61-command-centre.js')})
     .then(function(){return load('gm-v59-readability.js')})
     .catch(console.error);return;
 }if(Date.now()-started<20000)return setTimeout(wait,200);console.error('NFL GM: Sleeper data unavailable')})()}
