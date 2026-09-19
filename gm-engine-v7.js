@@ -30,16 +30,28 @@ function eligible(id,slot){
 }
 function optimise(ro){
  if(!ro)return {score:0,assign:[]};
- const ss=slots(), cand=[...new Set((ro.players||[]).map(sid))].map(id=>({id,v:proj(id)})).filter(x=>x.id&&x.v>0&&!unavailable(x.id));
+ const ss=slots(),cand=[...new Set((ro.players||[]).map(sid))].map(id=>({id,v:proj(id)})).filter(x=>x.id&&x.v>0&&!unavailable(x.id));
  const ordered=ss.map((slot,index)=>({slot,index,choices:cand.filter(x=>eligible(x.id,slot)).length})).sort((a,b)=>a.choices-b.choices);
- let best={score:0,assign:[]};
- function walk(i,used,out,total){
-  if(i===ordered.length){if(total>best.score)best={score:total,assign:out.slice()};return}
-  const q=ordered[i], choices=cand.filter(x=>!used.has(x.id)&&eligible(x.id,q.slot)).sort((a,b)=>b.v-a.v).slice(0,24);
-  if(!choices.length){walk(i+1,used,out,total);return}
-  for(const x of choices){used.add(x.id);out.push({id:x.id,slot:q.slot,index:q.index,score:x.v});walk(i+1,used,out,total+x.v);out.pop();used.delete(x.id)}
- }
- walk(0,new Set(),[],0);best.assign.sort((a,b)=>a.index-b.index);return best;
+ let states=[{score:0,used:new Set(),assign:[]}];
+ ordered.forEach(q=>{
+  const next=[];
+  states.forEach(st=>{
+   const choices=cand.filter(x=>!st.used.has(x.id)&&eligible(x.id,q.slot)).sort((a,b)=>b.v-a.v).slice(0,18);
+   if(!choices.length){next.push(st);return}
+   choices.forEach(x=>{const used=new Set(st.used);used.add(x.id);next.push({score:st.score+x.v,used,assign:st.assign.concat({id:x.id,slot:q.slot,index:q.index,score:x.v})})});
+  });
+  next.sort((a,b)=>b.score-a.score);
+  const seen=new Set(),keep=[];
+  for(const st of next){
+   const key=[...st.used].sort().join(',');
+   if(seen.has(key))continue;
+   seen.add(key);keep.push(st);
+   if(keep.length>=120)break;
+  }
+  states=keep;
+ });
+ const best=states.sort((a,b)=>b.score-a.score)[0]||{score:0,assign:[]};
+ best.assign.sort((a,b)=>a.index-b.index);return best;
 }
 function current(ro){
  const ss=slots(),st=(ro?.starters||[]).map(sid),out=[];
