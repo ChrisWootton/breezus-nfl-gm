@@ -74,7 +74,7 @@ function needs(){
  return ['QB','RB','WR','TE','DEF'].map(p=>({p,count:counts[p]||0,required:ss.filter(s=>s===p).length})).map(x=>({...x,need:Math.max(0,x.required+1-x.count)})).sort((a,b)=>b.need-a.need);
 }
 function waivers(){
- const pool=(S.waiverPool||[]).slice(); if(!pool.length)return [];
+ let source=(S.waiverPool||[]).slice();\n if(!source.length){const own=new Set(ids()); source=Object.entries(S.players||{}).filter(([id,p])=>!own.has(sid(id))&&p&&p.position&&p.team&&p.team!=='FA'&&['QB','RB','WR','TE','DEF'].includes(String(p.position).toUpperCase())).map(([id,p])=>({p:{player_id:id},score:Math.max(0,300-rank(id)),hot:0})).sort((a,b)=>b.score-a.score).slice(0,120)}\n const pool=source;
  const model=pool.map(w=>{const id=sid(w.p?.player_id||w.player_id);const score=n(w.score)+Math.max(0,50-rank(id))*.25+dynasty(id)*.1;return {id,score,trend:n(w.hot||w.count),position:pos(id),projection:proj(id)}});
  const nd=needs();return model.filter(x=>x.id&&!unavailable(x.id)).sort((a,b)=>b.score-a.score).slice(0,30).map((x,i)=>{
   const drop=ids().filter(id=>!unavailable(id)).sort((a,b)=>proj(a)-proj(b))[0]||null;
