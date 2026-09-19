@@ -10,7 +10,7 @@ function load(src){return new Promise(function(resolve,reject){var s=document.cr
 function dataReady(){try{return typeof S!=='undefined'&&S&&Array.isArray(S.rosters)&&S.rosters.length&&S.players&&Object.keys(S.players).length&&S.me}catch(e){return false}}
 function boot(){
   if(typeof S==='undefined'){setTimeout(boot,100);return}
-  load('gm-product-v1.js').then(function(){return load('gm-v7-playbook.js')}).catch(function(e){console.error('NFL GM decision centre failed',e)});
+  load('gm-product-v1.js').then(function(){return load('gm-v7-playbook.js').then(function(){return load('gm-v7-trade-analyzer.js')})}).catch(function(e){console.error('NFL GM decision centre failed',e)});
   var started=Date.now();
   (function waitData(){
     if(dataReady()){
