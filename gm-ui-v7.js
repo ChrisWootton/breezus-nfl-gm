@@ -4,6 +4,39 @@
 if(window.__breezusV7UI)return;window.__breezusV7UI=true;
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const V=()=>window.BREEZUS_V7, M=()=>V()?.model, nm=id=>window.pn?.(id)||id, pm=id=>window.pm?.(id)||'', score=id=>Number(window.expectedPoints?.(id)||0);
+function theme(){
+ if(document.getElementById('breezus-v7-theme'))return;
+ const s=document.createElement('style');s.id='breezus-v7-theme';
+ s.textContent=`
+  body{background:#090d12!important;color:#f5f7fa!important}
+  .app,.page,main{color:#f5f7fa}
+  .card{background:#10161d!important;color:#f5f7fa!important;border-color:#29333f!important}
+  .card h1,.card h2,.card h3,.card h4,.card b,.card strong,.player{color:#f5f7fa}
+  .card .note,.card .sub,.card .meta,.card .lab,.card .kpi,.card .txmeta{color:#aeb8c4!important}
+  .mini{background:#151c24!important;color:#f5f7fa!important;border-color:#303b48!important}
+  .mini b,.bigkpi,.num{color:#fff!important}
+  .mutedbox,.edgebox,.health{background:#151c24!important;color:#e9edf2!important;border-color:#303b48!important}
+  .mutedbox b,.edgebox b,.health b{color:#fff!important}
+  .row{border-color:#29333f!important}
+  table th{color:#98a4b2!important} table td{color:#e8edf2!important;border-color:#29333f!important}
+  .search,.select{background:#151c24!important;color:#fff!important;border-color:#303b48!important}
+  .search::placeholder{color:#8793a0!important}
+  .alert{color:#f5f7fa!important}
+  .alert.green{background:#10372f!important;color:#bdf5e7!important}
+  .alert.amber{background:#3b2d10!important;color:#ffe2a0!important}
+  .alert.red{background:#3a171b!important;color:#ffc2c8!important}
+  .pill.blue{background:#18294c!important;color:#bcd0ff!important}
+  .pill.green{background:#10372f!important;color:#a8f0de!important}
+  .pill.amber{background:#3b2d10!important;color:#ffe2a0!important}
+  .pill.red{background:#3a171b!important;color:#ffc2c8!important}
+  .slot{background:#242d37!important;color:#dce4ec!important}
+  #waiverBudget{color:#e8edf2!important;background:#151c24!important;border-color:#303b48!important}
+  #waiverBudget b{color:#fff!important}
+  .gm61-head{color:#fff!important}.gm61-head *{color:inherit}.gm61-meta{color:#aeb8c4!important}
+  .gm61-row{border-color:#29333f!important}.gm61-bid{background:#151c24!important;color:#fff!important}
+ `;
+ document.head.appendChild(s);
+}
 function card(title,body,badge=''){return '<div class="card"><div class="title"><h3>'+title+'</h3>'+ (badge?'<span class="pill green">'+badge+'</span>':'')+'</div>'+body+'</div>'}
 function row(left,right){return '<div class="row"><span>'+left+'</span><span>'+right+'</span></div>'}
 function pill(t,c='blue'){return '<span class="pill '+c+'">'+t+'</span>'}
@@ -49,12 +82,14 @@ function renderOrders(){
  $('allOrders').innerHTML=M().orders.map(o=>row('<b>'+esc(o.type)+'</b><br>'+esc(o.text),pill(o.priority,o.priority==='URGENT'?'red':o.priority==='ACTION'?'amber':'blue'))).join('')||'<div class="empty">No orders.</div>';
 }
 function render(){
+ theme();
  if(!M()||!S.mine)return;
  renderDash();renderLineup();renderWaivers();renderTrades();renderDynasty();renderMatch();renderLeague();renderOrders();
  $('status').innerHTML='<b>BREEZUS V7 READY.</b> One shared decision model is powering Lineup, Waivers, Trades, Dynasty, Matchup and League.';
  $('connectionDot').textContent='●';
 }
 function boot(){
+ theme();
  if(window.BREEZUS_V7?.ready){render();return}
  window.dispatchEvent(new Event('breezus:refresh'));
  setTimeout(()=>{if(window.BREEZUS_V7?.ready)render()},150);
