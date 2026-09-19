@@ -103,6 +103,23 @@ td{color:#edf1f6!important}
  .gdw-kpi b{font-size:20px!important}
  .gm-mob-label{color:#aeb8c7!important}.gm-mob-btn.active .gm-mob-label{color:#6ff0c7!important}
 }
+
+/* Final high-contrast mobile pass */
+.mini,.statgrid .mini,#summary .mini,#lineupSummary .mini{background:#171e27!important;color:#f7f9fc!important;border:1px solid #364250!important}
+.mini *,.statgrid .mini *,#summary .mini *,#lineupSummary .mini *{color:#f7f9fc!important;opacity:1!important}
+.mini .kpi,.statgrid .mini .kpi,#summary .mini .kpi,#lineupSummary .mini .kpi{color:#aeb8c7!important}
+.mini b,.statgrid .mini b,#summary .mini b,#lineupSummary .mini b{color:#ffffff!important;font-size:22px!important}
+#waiverBudget,#waiverBudget *{background:#171e27!important;color:#f2f5f8!important;border-color:#364250!important;opacity:1!important}
+#waiverBudget b{color:#ffffff!important}
+.alert.green,#alerts .alert.green{background:#123a31!important;color:#d9fff4!important;border:1px solid #2b7e6a!important}
+.alert.green *,#alerts .alert.green *{color:#d9fff4!important}
+.alert.amber,#alerts .alert.amber{background:#3d3014!important;color:#ffe7a8!important;border:1px solid #786126!important}
+.alert.red,#alerts .alert.red{background:#421c22!important;color:#ffd0d5!important;border:1px solid #7b3842!important}
+#summary .note,#alerts .note{color:#c1cbd6!important}
+.gm61-head{background:#17002f!important;color:#ffffff!important}
+.gm61-head h3,.gm61-head div,.gm61-head span{color:#ffffff!important}
+.gm61-meta{color:#c1cbd6!important}
+@media(max-width:850px){.mini,.statgrid .mini{min-height:78px!important}.mini b{font-size:24px!important}.mini .kpi{font-size:11px!important}}
 `;
  document.head.appendChild(s);
 }
