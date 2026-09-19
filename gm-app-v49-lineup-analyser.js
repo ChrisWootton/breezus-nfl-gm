@@ -65,12 +65,12 @@ function optimise(){
  return best;
 }
 
-function assignmentBySlot(best){
- const m={};(best?.assign||[]).forEach(x=>{if(!m[x.slot])m[x.slot]=x.id;});
+function assignmentByIndex(best){
+ const m={};(best?.assign||[]).forEach(x=>{m[x.index]=x.id;});
  return m;
 }
 function currentScore(){return starters().reduce((t,id)=>t+(id&&id!=='0'?proj(id):0),0);}
-function currentMap(){const m={};const ss=slots(),st=starters();ss.forEach((slot,i)=>{m[slot]=st[i]&&st[i]!=='0'?st[i]:null;});return m;}
+function currentMap(){const m={};const st=starters(),ss=slots();ss.forEach((slot,i)=>{m[i]=st[i]&&st[i]!=='0'?st[i]:null;});return m;}
 function currentLegalScore(){
  const m=currentMap(),used=new Set(),score=0;
  Object.entries(m).forEach(([slot,id])=>{
@@ -126,7 +126,7 @@ function css(){
 function render(){
  const el=document.getElementById('lineup');if(!el||!roster())return;
  css();
- const best=optimise(), bestMap=assignmentBySlot(best), cmap=currentMap();
+ const best=optimise(), bestMap=assignmentByIndex(best), cmap=currentMap();
  const legalCurrent=currentLegalScore(), rawCurrent=currentScore();
  const gain=Math.max(0,best.score-legalCurrent);
  const decisions=slots().map(slot=>({slot,id:cmap[slot],d:decision(slot,cmap[slot],bestMap)}));
@@ -144,15 +144,16 @@ function render(){
    </div>`;
  }).join('');
 
- const bestRows=slots().map(slot=>{
-   const id=bestMap[slot];const current=cmap[slot];
+ const bestRows=slots().map((slot,index)=>{
+   const id=bestMap[index];const current=cmap[index];
    return `<div class="gm60-row"><span><span class="gm60-slot">${esc(slot)}</span> <b>${id?esc(pname(id)):'Empty'}</b><br><span class="gm60-meta">${id?esc(pos(id))+' · '+proj(id).toFixed(1)+' projected':''}</span></span>
    <span class="gm60-pill gm60-${id===current?'green':'blue'}">${id===current?'HOLD':'OPTIMAL'}</span></div>`;
  }).join('');
 
  const benchPlayers=bench().map(id=>({id,v:proj(id)})).sort((a,b)=>b.v-a.v);
+ const benchWatch=new Set(decisions.filter(x=>x.target&&x.target!==x.id).map(x=>x.target));
  const benchRows=benchPlayers.map((x,i)=>
-   `<div class="gm60-row"><span><b>${i+1}. ${esc(pname(x.id))}</b><br><span class="gm60-meta">${esc(pos(x.id))} · ${esc(team(x.id))} · ${esc(health(x.id))}</span></span><b>${x.v.toFixed(1)}</b></div>`
+   `<div class="gm60-row"><span><b>${i+1}. ${esc(pname(x.id))}</b> ${benchWatch.has(x.id)?'<span class="gm60-pill gm60-blue">LINEUP WATCH</span>':''}<br><span class="gm60-meta">${esc(pos(x.id))} · ${esc(team(x.id))} · ${esc(health(x.id))}</span></span><b>${x.v.toFixed(1)}</b></div>`
  ).join('');
 
  el.innerHTML=`<div class="gm60-wrap">
