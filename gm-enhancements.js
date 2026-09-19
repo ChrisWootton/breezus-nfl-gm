@@ -14,6 +14,8 @@ function boot(){var started=Date.now();(function wait(){if(ready()){
     .then(function(){return load('gm-dynasty-war-room.js')})
     .then(function(){return load('gm-v59-readability.js')})
     .then(function(){return load('gm-app-v61-waiver-gm.js')})
+    .then(function(){return load('gm-engine-v7.js')})
+    .then(function(){return load('gm-ui-v7.js')})
     .catch(console.error);return;
 }if(Date.now()-started<20000)return setTimeout(wait,200);console.error('NFL GM: Sleeper data unavailable')})()}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
